@@ -4,19 +4,29 @@ import {
   createPoem, 
   createStanza, 
   deleteStanza, 
+  getAllPoems,
   getPoemById, 
-  getPoems, 
+  getMyPoemById,
+  getMyPoems, 
   updatePoemTitle,
-  updateStanza 
+  updateStanza,
+  reorderStanzas
 } from '../controllers/poems-controller.js';
 
 const router = express.Router();
 
-// Poem routes
-router.get("/poems", protectRoute, getPoems);
-router.post("/poems", protectRoute, createPoem);
+// Poem routes - private (user's own poems)
+router.get("/my-poems", protectRoute, getMyPoems);
+router.get("/my-poems/:poemId", protectRoute, getMyPoemById);
+
+// Poem routes - public (all poems)
+router.get("/poems", protectRoute, getAllPoems);
 router.get("/poems/:poemId", protectRoute, getPoemById);
+
+// Poem creation and modification
+router.post("/poems", protectRoute, createPoem);
 router.put("/poems/:poemId/title", protectRoute, updatePoemTitle);
+router.put("/poems/:poemId/reorder", protectRoute, reorderStanzas);
 
 // Stanza routes
 router.post("/stanzas", protectRoute, createStanza);

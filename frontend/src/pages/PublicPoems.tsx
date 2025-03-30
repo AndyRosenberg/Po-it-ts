@@ -1,27 +1,23 @@
-import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuthContext } from "../hooks/useAuthContext";
-import { useMyPoems, Poem } from "../hooks/usePoems";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
+import { usePublicPoems, Poem } from "../hooks/usePoems";
 
-export const Home = () => {
+export const PublicPoems = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
+  const { poems, isLoading, error } = usePublicPoems();
   const [searchQuery, setSearchQuery] = useState("");
-  const { poems, isLoading, error } = useMyPoems();
-
-  // Get initials from username
-  const initials = authUser?.username 
-    ? authUser.username.split(' ').map(name => name[0]).join('').toUpperCase().substring(0, 2)
-    : 'U';
 
   // Filter poems based on search query
   const filteredPoems = searchQuery.trim()
     ? poems.filter(poem => {
         const stanzaText = poem.stanzas.map(s => s.body).join(' ').toLowerCase();
         const titleText = poem.title.toLowerCase();
+        const authorText = poem.user?.username.toLowerCase() || '';
         const searchTerm = searchQuery.toLowerCase();
-        return stanzaText.includes(searchTerm) || titleText.includes(searchTerm);
+        return stanzaText.includes(searchTerm) || 
+               titleText.includes(searchTerm) || 
+               authorText.includes(searchTerm);
       })
     : poems;
 
@@ -50,18 +46,13 @@ export const Home = () => {
               <h1 className="text-3xl font-bold">
                 <span className="bg-gradient-to-r from-cyan-400 to-orange-500 bg-clip-text text-transparent">Po-it</span>
               </h1>
-              <span className="bg-cyan-500/20 text-cyan-200 text-xs px-2 py-1 rounded-full">My Poems</span>
+              <span className="bg-cyan-500/20 text-cyan-200 text-xs px-2 py-1 rounded-full">Explore</span>
             </div>
             
             <div className="flex items-center space-x-4">
-              <Link to="/explore" className="text-slate-300 hover:text-white transition-colors">
-                Explore
+              <Link to="/" className="text-slate-300 hover:text-white transition-colors">
+                My Poems
               </Link>
-              <div className="relative">
-                <button className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-800/40 hover:bg-slate-700/60 transition-colors">
-                  <span className="text-sm font-medium">{initials}</span>
-                </button>
-              </div>
             </div>
           </div>
         </header>
@@ -75,7 +66,7 @@ export const Home = () => {
           </div>
           <input
             type="text"
-            placeholder="Search poems..."
+            placeholder="Search poems or authors..."
             className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -106,7 +97,7 @@ export const Home = () => {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">No poems yet</h3>
-                <p className="text-slate-400 mb-6 max-w-md">Create your first poem to get started. Express yourself through words and share your creativity.</p>
+                <p className="text-slate-400 mb-6 max-w-md">There are no published poems yet. Be the first to share your creativity!</p>
                 <Link 
                   to="/poems/create"
                   className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
@@ -135,14 +126,24 @@ export const Home = () => {
                     <div className="mb-2 font-medium text-white text-lg">
                       {poem.title}
                     </div>
-                    <div className="mb-3 text-xs text-slate-500">
-                      {new Date(poem.updatedAt).toLocaleDateString()}
+                    <div className="mb-3 text-xs flex justify-between">
+                      <span className="text-slate-500">
+                        {new Date(poem.updatedAt).toLocaleDateString()}
+                      </span>
+                      {poem.user && (
+                        <span className="text-cyan-400">
+                          by {poem.user.username}
+                        </span>
+                      )}
                     </div>
                     <div className="prose prose-slate prose-invert max-w-none mb-4 text-slate-300 line-clamp-4 whitespace-pre-wrap">
                       {formatPreview(poem)}
                     </div>
                     <div className="flex justify-between items-center text-xs text-slate-500">
                       <span>{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
+                      {poem.isOwner && (
+                        <span className="bg-slate-700 px-2 py-1 rounded text-slate-300">Your poem</span>
+                      )}
                     </div>
                   </Link>
                 ))
@@ -167,4 +168,4 @@ export const Home = () => {
   );
 };
 
-export default Home;
+export default PublicPoems;
