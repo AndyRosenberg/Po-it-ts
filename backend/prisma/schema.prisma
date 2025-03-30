@@ -29,6 +29,7 @@ model User {
 model Poem {
   @@map("poems")
   id String @id @default(cuid())
+  title String @default("Untitled Poem")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId String

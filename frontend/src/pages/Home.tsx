@@ -1,13 +1,95 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useAuthContext } from "../hooks/useAuthContext";
+
+interface Stanza {
+  id: string;
+  body: string;
+  poemId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Poem {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  stanzas: Stanza[];
+}
 
 export const Home = () => {
   useAuthRedirect();
+  const { authUser } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
+  const [poems, setPoems] = useState<Poem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get initials from username
+  const initials = authUser?.username 
+    ? authUser.username.split(' ').map(name => name[0]).join('').toUpperCase().substring(0, 2)
+    : 'U';
+
+  // Load poems
+  useEffect(() => {
+    const fetchPoems = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to fetch poems');
+        }
+        
+        const data = await response.json();
+        setPoems(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPoems();
+  }, []);
+
+  // Filter poems based on search query
+  const filteredPoems = searchQuery.trim()
+    ? poems.filter(poem => {
+        const stanzaText = poem.stanzas.map(s => s.body).join(' ').toLowerCase();
+        const titleText = poem.title.toLowerCase();
+        const searchTerm = searchQuery.toLowerCase();
+        return stanzaText.includes(searchTerm) || titleText.includes(searchTerm);
+      })
+    : poems;
+
+  // Format preview text
+  const formatPreview = (poem: Poem) => {
+    if (poem.stanzas.length === 0) return "Empty poem";
+    
+    // Get the first stanza
+    const firstStanza = poem.stanzas[0].body;
+    
+    // Truncate if needed
+    if (firstStanza.length > 120) {
+      return firstStanza.substring(0, 120) + '...';
+    }
+    
+    return firstStanza;
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4">
-      <div className="flex flex-col h-[90vh]">
+      <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
         <header className="py-6 mb-8">
           <div className="flex justify-between items-center">
@@ -28,7 +110,7 @@ export const Home = () => {
               
               <div className="relative">
                 <button className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-800/40 hover:bg-slate-700/60 transition-colors">
-                  <span className="text-sm font-medium">JD</span>
+                  <span className="text-sm font-medium">{initials}</span>
                 </button>
               </div>
             </div>
@@ -51,35 +133,85 @@ export const Home = () => {
           />
         </div>
         
+        {/* Error display */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
+            {error}
+          </div>
+        )}
+        
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Empty state */}
-            <div className="md:col-span-2 flex flex-col items-center justify-center py-12 px-4 text-center">
-              <div className="bg-cyan-500/10 w-16 h-16 mb-6 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-cyan-400">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No poems yet</h3>
-              <p className="text-slate-400 mb-6 max-w-md">Create your first poem to get started. Express yourself through words and share your creativity.</p>
-              <button className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Create new poem
-              </button>
+          {/* Loading state */}
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
-          </div>
+          ) : poems.length === 0 ? (
+            /* Empty state */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2 flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="bg-cyan-500/10 w-16 h-16 mb-6 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-cyan-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No poems yet</h3>
+                <p className="text-slate-400 mb-6 max-w-md">Create your first poem to get started. Express yourself through words and share your creativity.</p>
+                <Link 
+                  to="/poems/create"
+                  className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Create new poem
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Poem list */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+              {filteredPoems.length === 0 ? (
+                <div className="md:col-span-2 text-center py-10">
+                  <p className="text-slate-400">No poems match your search</p>
+                </div>
+              ) : (
+                filteredPoems.map(poem => (
+                  <Link
+                    key={poem.id}
+                    to={`/poems/${poem.id}`}
+                    className="block bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-cyan-600/30 hover:bg-slate-800/80 transition-colors shadow-md hover:shadow-cyan-500/10"
+                  >
+                    <div className="mb-2 font-medium text-white text-lg">
+                      {poem.title}
+                    </div>
+                    <div className="mb-3 text-xs text-slate-500">
+                      {new Date(poem.updatedAt).toLocaleDateString()}
+                    </div>
+                    <div className="prose prose-slate prose-invert max-w-none mb-4 text-slate-300 line-clamp-4 whitespace-pre-wrap">
+                      {formatPreview(poem)}
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-slate-500">
+                      <span>{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
         </div>
         
         {/* Floating action button (mobile only) */}
-        <div className="md:hidden fixed bottom-6 right-6">
-          <button className="h-14 w-14 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-700 text-white shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+        <div className="fixed bottom-6 right-6">
+          <Link 
+            to="/poems/create"
+            className="h-14 w-14 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-700 text-white shadow-lg shadow-cyan-500/20 flex items-center justify-center hover:from-cyan-600 hover:to-cyan-800 transition-all hover:shadow-cyan-500/30"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
     </div>
