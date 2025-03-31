@@ -3,6 +3,7 @@ import { protectRoute } from '../middleware/protect-route.js';
 import { 
   createPoem, 
   createStanza, 
+  deletePoem,
   deleteStanza, 
   getAllPoems,
   getPoemById, 
@@ -27,6 +28,7 @@ router.get("/poems/:poemId", protectRoute, getPoemById);
 router.post("/poems", protectRoute, createPoem);
 router.put("/poems/:poemId/title", protectRoute, updatePoemTitle);
 router.put("/poems/:poemId/reorder", protectRoute, reorderStanzas);
+router.delete("/poems/:poemId", protectRoute, deletePoem);
 
 // Stanza routes
 router.post("/stanzas", protectRoute, createStanza);

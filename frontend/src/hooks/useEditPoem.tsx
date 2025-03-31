@@ -27,7 +27,6 @@ export const useEditPoem = () => {
   const [error, setError] = useState<string | null>(null);
   const [stanzas, setStanzas] = useState<Stanza[]>([]);
   const [poemTitle, setPoemTitle] = useState<string>("");
-  const [isOwner, setIsOwner] = useState(false);
   const navigate = useNavigate();
 
   // Fetch the poem data
@@ -51,7 +50,6 @@ export const useEditPoem = () => {
       const poem = await response.json();
       setPoemTitle(poem.title);
       setStanzas(poem.stanzas);
-      setIsOwner(poem.isOwner);
       
       if (!poem.isOwner) {
         const ownershipError = "You don't have permission to edit this poem";

@@ -1,6 +1,43 @@
 import { Request, Response } from "express";
 import prisma from "../db/prisma.js";
 
+export const deletePoem = async (request: Request, response: Response) => {
+  try {
+    const { poemId } = request.params;
+    
+    // Verify the poem belongs to the user
+    const poem = await prisma.poem.findUnique({
+      where: {
+        id: poemId,
+        userId: request.user.id
+      }
+    });
+    
+    if (!poem) {
+      return response.status(404).json({ error: "Poem not found" });
+    }
+    
+    // Delete all stanzas first (will cascade, but doing it explicitly for clarity)
+    await prisma.stanza.deleteMany({
+      where: {
+        poemId
+      }
+    });
+    
+    // Delete the poem
+    await prisma.poem.delete({
+      where: {
+        id: poemId
+      }
+    });
+    
+    response.status(204).send();
+  } catch (error: any) {
+    console.error("Error in deletePoem: ", error.message);
+    response.status(500).json({ error: "Internal server error" });
+  }
+}
+
 export const createPoem = async (request: Request, response: Response) => {
   try {
     const { title } = request.body;

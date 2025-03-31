@@ -32,35 +32,40 @@ export const useMyPoems = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPoems = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch(`${process.env.HOST_DOMAIN}/api/my-poems`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to fetch poems');
-        }
-        
-        const data = await response.json();
-        setPoems(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchPoems = async () => {
+    setIsLoading(true);
+    setError(null);
     
+    try {
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/my-poems`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch poems');
+      }
+      
+      const data = await response.json();
+      setPoems(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Function to manually refetch poems
+  const refetch = () => {
+    fetchPoems();
+  };
+  
+  useEffect(() => {
     fetchPoems();
   }, []);
 
-  return { poems, isLoading, error };
+  return { poems, isLoading, error, refetch };
 };
 
 // Hook for fetching all public poems
@@ -69,33 +74,38 @@ export const usePublicPoems = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPoems = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to fetch poems');
-        }
-        
-        const data = await response.json();
-        setPoems(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchPoems = async () => {
+    setIsLoading(true);
+    setError(null);
     
+    try {
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch poems');
+      }
+      
+      const data = await response.json();
+      setPoems(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Function to manually refetch poems
+  const refetch = () => {
+    fetchPoems();
+  };
+  
+  useEffect(() => {
     fetchPoems();
   }, []);
 
-  return { poems, isLoading, error };
+  return { poems, isLoading, error, refetch };
 };
