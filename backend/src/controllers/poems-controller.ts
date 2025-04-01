@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../db/prisma.js";
+import { Prisma } from "@prisma/client";
 
 export const deletePoem = async (request: Request, response: Response) => {
   try {
@@ -63,7 +64,7 @@ export const getMyPoems = async (request: Request, response: Response) => {
     const limitNum = parseInt(limit as string, 10) || 10;
     
     // Ensure reasonable limits
-    const finalLimit = Math.min(Math.max(limitNum, 1), 50);
+    const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
     // Base query
     const baseQuery = {
@@ -74,7 +75,7 @@ export const getMyPoems = async (request: Request, response: Response) => {
         stanzas: true
       },
       orderBy: {
-        updatedAt: 'desc'
+        updatedAt: Prisma.SortOrder.desc
       }
     };
 
@@ -126,7 +127,7 @@ export const getAllPoems = async (request: Request, response: Response) => {
     const limitNum = parseInt(limit as string, 10) || 10;
     
     // Ensure reasonable limits
-    const finalLimit = Math.min(Math.max(limitNum, 1), 50);
+    const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
     // Base query
     const baseQuery = {
@@ -141,7 +142,7 @@ export const getAllPoems = async (request: Request, response: Response) => {
         }
       },
       orderBy: {
-        updatedAt: 'desc'
+        updatedAt: Prisma.SortOrder.desc
       }
     };
 
@@ -202,7 +203,7 @@ export const getMyPoemById = async (request: Request, response: Response) => {
       include: {
         stanzas: {
           orderBy: {
-            position: 'asc'
+            position: Prisma.SortOrder.asc
           }
         }
       }
@@ -231,7 +232,7 @@ export const getPoemById = async (request: Request, response: Response) => {
       include: {
         stanzas: {
           orderBy: {
-            position: 'asc'
+            position: Prisma.SortOrder.asc
           }
         },
         user: {
@@ -409,7 +410,7 @@ export const deleteStanza = async (request: Request, response: Response) => {
         poemId: stanza.poemId
       },
       orderBy: {
-        position: 'asc'
+        position: Prisma.SortOrder.asc
       }
     });
     
@@ -484,7 +485,7 @@ export const reorderStanzas = async (request: Request, response: Response) => {
       include: {
         stanzas: {
           orderBy: {
-            position: 'asc'
+            position: Prisma.SortOrder.asc
           }
         }
       }

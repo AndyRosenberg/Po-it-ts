@@ -49,21 +49,29 @@ export const useEditPoem = () => {
       const poemData = await response.json();
       console.log("Poem data fetched:", poemData);
       return poemData as Poem;
-    },
-    onSuccess: (poem) => {
-      console.log("Setting poem data in onSuccess:", poem.title);
-      setPoemTitle(poem.title);
-      setStanzas(poem.stanzas);
+    }
+  });
+  
+  // Handle success and error effects separately
+  useEffect(() => {
+    if (poemData) {
+      console.log("Setting poem data:", poemData.title);
+      setPoemTitle(poemData.title);
+      setStanzas(poemData.stanzas);
       
-      if (!poem.isOwner) {
+      if (!poemData.isOwner) {
         const ownershipError = "You don't have permission to edit this poem";
         toast.error(ownershipError);
       }
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     }
-  });
+  }, [poemData]);
+  
+  // Handle errors
+  useEffect(() => {
+    if (fetchError) {
+      toast.error((fetchError as Error).message);
+    }
+  }, [fetchError]);
   
   // Add a stanza to the poem
   const { mutateAsync: addStanza, isPending: isAddingStanza } = useMutation({
@@ -88,16 +96,20 @@ export const useEditPoem = () => {
       }
       
       return response.json();
-    },
-    onSuccess: (newStanza) => {
-      setStanzas(prev => [...prev, newStanza]);
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-      return newStanza;
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     }
   });
+  
+  // Handle successful stanza addition
+  const onAddStanzaSuccess = (newStanza: Stanza) => {
+    setStanzas(prev => [...prev, newStanza]);
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+    return newStanza;
+  };
+  
+  // Handle stanza addition errors
+  const onAddStanzaError = (error: Error) => {
+    toast.error(error.message);
+  };
 
   // Update an existing stanza
   const { mutateAsync: updateStanza, isPending: isUpdatingStanza } = useMutation({
@@ -117,18 +129,22 @@ export const useEditPoem = () => {
       }
       
       return response.json();
-    },
-    onSuccess: (updatedStanza) => {
-      setStanzas(prev => prev.map(stanza => 
-        stanza.id === updatedStanza.id ? updatedStanza : stanza
-      ));
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-      return updatedStanza;
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     }
   });
+  
+  // Handle successful stanza update
+  const onUpdateStanzaSuccess = (updatedStanza: Stanza) => {
+    setStanzas(prev => prev.map(stanza => 
+      stanza.id === updatedStanza.id ? updatedStanza : stanza
+    ));
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+    return updatedStanza;
+  };
+  
+  // Handle stanza update errors
+  const onUpdateStanzaError = (error: Error) => {
+    toast.error(error.message);
+  };
 
   // Delete a stanza
   const { mutateAsync: deleteStanza, isPending: isDeletingStanza } = useMutation({
@@ -144,16 +160,20 @@ export const useEditPoem = () => {
       }
       
       return stanzaId;
-    },
-    onSuccess: (stanzaId) => {
-      setStanzas(prev => prev.filter(stanza => stanza.id !== stanzaId));
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-      return true;
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     }
   });
+  
+  // Handle successful stanza deletion
+  const onDeleteStanzaSuccess = (stanzaId: string) => {
+    setStanzas(prev => prev.filter(stanza => stanza.id !== stanzaId));
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+    return true;
+  };
+  
+  // Handle stanza deletion errors
+  const onDeleteStanzaError = (error: Error) => {
+    toast.error(error.message);
+  };
 
   // Reorder stanzas locally and on the server
   const { mutateAsync: reorderStanzasOnServer, isPending: isReorderingStanzas } = useMutation({
@@ -175,17 +195,21 @@ export const useEditPoem = () => {
       }
       
       return response.json();
-    },
-    onSuccess: (updatedPoem) => {
-      setStanzas(updatedPoem.stanzas);
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-      // Refetch poem to ensure state is consistent with server
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
     }
   });
+  
+  // Handle successful stanza reordering
+  const onReorderStanzasSuccess = (updatedPoem: Poem) => {
+    setStanzas(updatedPoem.stanzas);
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+  };
+  
+  // Handle stanza reordering errors
+  const onReorderStanzasError = (error: Error) => {
+    toast.error(error.message);
+    // Refetch poem to ensure state is consistent with server
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+  };
 
   // Reorder stanzas function that users will call
   const reorderStanzas = async (sourceIndex: number, destinationIndex: number) => {
@@ -201,9 +225,10 @@ export const useEditPoem = () => {
     
     // Call the mutation
     try {
-      await reorderStanzasOnServer(stanzaIds);
+      const result = await reorderStanzasOnServer(stanzaIds);
+      onReorderStanzasSuccess(result);
     } catch (error) {
-      // Error handling is done in the mutation
+      onReorderStanzasError(error as Error);
     }
   };
 
@@ -227,16 +252,20 @@ export const useEditPoem = () => {
       }
       
       return response.json();
-    },
-    onSuccess: (updatedPoem) => {
-      setPoemTitle(updatedPoem.title);
-      queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-      return updatedPoem;
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     }
   });
+  
+  // Handle successful title update
+  const onUpdateTitleSuccess = (updatedPoem: Poem) => {
+    setPoemTitle(updatedPoem.title);
+    queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+    return updatedPoem;
+  };
+  
+  // Handle title update errors
+  const onUpdateTitleError = (error: Error) => {
+    toast.error(error.message);
+  };
 
   // Complete and view the poem
   const completePoem = () => {
@@ -262,6 +291,47 @@ export const useEditPoem = () => {
   // Calculate overall loading state
   const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle;
 
+  // Wrap mutations with their success and error handlers
+  const addStanzaWithHandlers = async (body: string) => {
+    try {
+      const result = await addStanza(body);
+      return onAddStanzaSuccess(result);
+    } catch (error) {
+      onAddStanzaError(error as Error);
+      throw error;
+    }
+  };
+
+  const updateStanzaWithHandlers = async (stanzaId: string, body: string) => {
+    try {
+      const result = await updateStanza({ stanzaId, body });
+      return onUpdateStanzaSuccess(result);
+    } catch (error) {
+      onUpdateStanzaError(error as Error);
+      throw error;
+    }
+  };
+
+  const deleteStanzaWithHandlers = async (stanzaId: string) => {
+    try {
+      const result = await deleteStanza(stanzaId);
+      return onDeleteStanzaSuccess(result);
+    } catch (error) {
+      onDeleteStanzaError(error as Error);
+      throw error;
+    }
+  };
+
+  const updateTitleWithHandlers = async (title: string) => {
+    try {
+      const result = await updateTitle(title);
+      return onUpdateTitleSuccess(result);
+    } catch (error) {
+      onUpdateTitleError(error as Error);
+      throw error;
+    }
+  };
+
   return {
     isLoading,
     error: fetchError ? (fetchError as Error).message : null,
@@ -269,11 +339,11 @@ export const useEditPoem = () => {
     poemId,
     poemTitle,
     poemData,
-    addStanza: (body: string) => addStanza(body),
-    updateStanza: (stanzaId: string, body: string) => updateStanza({ stanzaId, body }),
-    deleteStanza,
+    addStanza: addStanzaWithHandlers,
+    updateStanza: updateStanzaWithHandlers,
+    deleteStanza: deleteStanzaWithHandlers,
     reorderStanzas,
-    updateTitle,
+    updateTitle: updateTitleWithHandlers,
     completePoem,
   };
 };

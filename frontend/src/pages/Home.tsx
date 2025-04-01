@@ -25,7 +25,7 @@ export const Home = () => {
   const observerTarget = useRef(null);
 
   const handleObserver = useCallback(
-    (entries) => {
+    (entries: any) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
         fetchNextPage();
@@ -125,7 +125,7 @@ export const Home = () => {
         {/* Error display */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
-            {error}
+            {`${error}`}
           </div>
         )}
         
@@ -195,13 +195,12 @@ export const Home = () => {
                           </svg>
                         </Link>
                         <button 
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             if (window.confirm('Are you sure you want to delete this poem? This action cannot be undone.')) {
-                              deletePoem(poem.id).then(() => {
-                                refetch();
-                              });
+                              await deletePoem(poem.id);
+                              refetch();
                             }
                           }}
                           className="p-1.5 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-700"
