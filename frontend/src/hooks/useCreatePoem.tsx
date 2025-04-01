@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { arrayMove } from '@dnd-kit/sortable';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Stanza {
   id?: string;
@@ -19,19 +20,15 @@ interface Poem {
 }
 
 export const useCreatePoem = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [stanzas, setStanzas] = useState<Stanza[]>([]);
   const [poemId, setPoemId] = useState<string | null>(null);
   const [poemTitle, setPoemTitle] = useState<string>("Untitled Poem");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Create a new poem without passing title (we'll update it later)
-  const createPoem = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  // Create a new poem
+  const { mutateAsync: createPoem, isPending: isCreatingPoem } = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
         method: 'POST',
         headers: {
@@ -45,25 +42,24 @@ export const useCreatePoem = () => {
         throw new Error(data.error || 'Failed to create poem');
       }
       
-      const newPoem = await response.json();
+      return response.json();
+    },
+    onSuccess: (newPoem) => {
       setPoemId(newPoem.id);
       return newPoem.id;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   // Add a stanza to the poem
-  const addStanza = async (body: string, pId?: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const { mutateAsync: addStanza, isPending: isAddingStanza } = useMutation({
+    mutationFn: async ({ body, pId }: { body: string, pId?: string }) => {
       // If we don't have a poem ID yet, create a new poem first
-      const activePoemId = pId || poemId || await createPoem();
+      let activePoemId = pId || poemId;
+      
+      if (!activePoemId) {
+        const newPoem = await createPoem();
+        activePoemId = newPoem.id;
+      }
       
       if (!activePoemId) {
         throw new Error('Failed to create poem');
@@ -86,28 +82,22 @@ export const useCreatePoem = () => {
         throw new Error(data.error || 'Failed to add stanza');
       }
       
-      const newStanza = await response.json();
+      return response.json();
+    },
+    onSuccess: (newStanza) => {
       setStanzas(prev => [...prev, newStanza]);
       
-      if (!poemId) {
-        setPoemId(activePoemId);
+      if (!poemId && newStanza.poemId) {
+        setPoemId(newStanza.poemId);
       }
       
       return newStanza;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   // Update an existing stanza
-  const updateStanza = async (stanzaId: string, body: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const { mutateAsync: updateStanza, isPending: isUpdatingStanza } = useMutation({
+    mutationFn: async ({ stanzaId, body }: { stanzaId: string, body: string }) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'PUT',
         headers: {
@@ -122,26 +112,20 @@ export const useCreatePoem = () => {
         throw new Error(data.error || 'Failed to update stanza');
       }
       
-      const updatedStanza = await response.json();
+      return response.json();
+    },
+    onSuccess: (updatedStanza) => {
       setStanzas(prev => prev.map(stanza => 
-        stanza.id === stanzaId ? updatedStanza : stanza
+        stanza.id === updatedStanza.id ? updatedStanza : stanza
       ));
       
       return updatedStanza;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   // Delete a stanza
-  const deleteStanza = async (stanzaId: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const { mutateAsync: deleteStanza, isPending: isDeletingStanza } = useMutation({
+    mutationFn: async (stanzaId: string) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -152,30 +136,34 @@ export const useCreatePoem = () => {
         throw new Error(data.error || 'Failed to delete stanza');
       }
       
+      return stanzaId;
+    },
+    onSuccess: (stanzaId) => {
       setStanzas(prev => prev.filter(stanza => stanza.id !== stanzaId));
       return true;
-    } catch (err: any) {
-      setError(err.message);
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  // Reorder stanzas (local state only)
-  const reorderStanzas = (sourceIndex: number, destinationIndex: number) => {
-    setStanzas(prev => arrayMove(prev, sourceIndex, destinationIndex));
-  };
+  });
 
   // Update poem title
-  const updateTitle = async (title: string) => {
-    if (!poemId) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/title`, {
+  const { mutateAsync: updateTitle, isPending: isUpdatingTitle } = useMutation({
+    mutationFn: async (title: string) => {
+      // If we don't have a poem ID yet, create a new poem first
+      let activePoemId = poemId;
+      
+      if (!activePoemId) {
+        try {
+          const newPoem = await createPoem();
+          activePoemId = newPoem.id;
+        } catch (error) {
+          throw new Error('Failed to create poem for title update');
+        }
+      }
+      
+      if (!activePoemId) {
+        throw new Error('Failed to create poem for title update');
+      }
+      
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${activePoemId}/title`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,33 +177,48 @@ export const useCreatePoem = () => {
         throw new Error(data.error || 'Failed to update title');
       }
       
-      const updatedPoem = await response.json();
+      return response.json();
+    },
+    onSuccess: (updatedPoem) => {
       setPoemTitle(updatedPoem.title);
+      setPoemId(updatedPoem.id);
       return updatedPoem;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  // Reorder stanzas (local state only)
+  const reorderStanzas = (sourceIndex: number, destinationIndex: number) => {
+    setStanzas(prev => arrayMove(prev, sourceIndex, destinationIndex));
   };
 
   // Complete and view the poem
   const completePoem = () => {
     if (poemId) {
+      queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+      queryClient.invalidateQueries({ queryKey: ['public-poems'] });
       navigate(`/poems/${poemId}`);
     }
   };
 
+  // Calculate overall loading state
+  const isLoading = isCreatingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isUpdatingTitle;
+
   return {
     isLoading,
-    error,
+    error: null, // We're handling errors in the mutations
     stanzas,
     poemId,
     poemTitle,
-    createPoem,
-    addStanza,
-    updateStanza,
+    createPoem: async () => {
+      const poem = await createPoem();
+      return poem.id;
+    },
+    addStanza: async (body: string, pId?: string) => {
+      return addStanza({ body, pId });
+    },
+    updateStanza: async (stanzaId: string, body: string) => {
+      return updateStanza({ stanzaId, body });
+    },
     deleteStanza,
     reorderStanzas,
     updateTitle,

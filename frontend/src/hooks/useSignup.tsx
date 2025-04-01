@@ -1,20 +1,19 @@
-import { useState } from "react"
 import { useAuthContext } from "./useAuthContext";
 import toast from "react-hot-toast";
+import { useMutation } from "@tanstack/react-query";
 
-type SignupInputs = {
-	email: string;
+export type SignupInputs = {
+  email: string;
   username: string;
   password: string;
   confirmPassword: string;
 }
 
 export const useSignup = () => {
-  const [loading, setLoading] = useState(false);
   const { setAuthUser } = useAuthContext();
 
-  const signup = async (inputs: SignupInputs) => {
-    try {
+  const { mutate: signup, isPending: loading, error } = useMutation({
+    mutationFn: async (inputs: SignupInputs) => {
       const response = await fetch(
         `${process.env.HOST_DOMAIN}/api/auth/signup`,
         {
@@ -33,14 +32,16 @@ export const useSignup = () => {
         throw new Error(data.error);
       }
 
+      return data;
+    },
+    onSuccess: (data) => {
       setAuthUser(data);
-    } catch (error: any) {
+    },
+    onError: (error: Error) => {
       console.error(error.message);
       toast.error(error.message);
-    } finally {
-      setLoading(false);
     }
-  }
+  });
 
-  return { loading, signup };
+  return { loading, signup, error };
 }

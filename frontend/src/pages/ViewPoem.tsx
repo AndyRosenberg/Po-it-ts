@@ -20,7 +20,7 @@ export const ViewPoem = () => {
   const [poem, setPoem] = useState<ExtendedPoem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { deletePoem, isLoading: isDeleting } = useDeletePoem();
+  const { deletePoem, isLoading: isDeleting, error: deleteError } = useDeletePoem();
 
   useEffect(() => {
     const fetchPoem = async () => {
@@ -79,9 +79,9 @@ export const ViewPoem = () => {
         </header>
         
         {/* Error display */}
-        {error && (
+        {(error || deleteError) && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
-            {error}
+            {error || deleteError}
           </div>
         )}
         

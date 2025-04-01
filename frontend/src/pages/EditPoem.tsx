@@ -122,7 +122,6 @@ export const EditPoem = () => {
   const { 
     stanzas, 
     isLoading,
-    setIsLoading,
     error,
     poemTitle,
     poemId,
@@ -139,12 +138,13 @@ export const EditPoem = () => {
   
   // Keep titleText in sync with poemTitle
   useEffect(() => {
+    console.log("PoemTitle updated:", poemTitle);
     setTitleText(poemTitle);
   }, [poemTitle]);
 
-  // Redirect if not the owner
+  // Redirect if not the owner or if there's an error
   useEffect(() => {
-    if (!isLoading && poemId && error?.length) {
+    if (!isLoading && poemId && error) {
       navigate(`/poems/${poemId}`);
     }
   }, [isLoading, error, poemId, navigate]);
@@ -172,9 +172,7 @@ export const EditPoem = () => {
       const newIndex = stanzas.findIndex(item => item.id === over.id);
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        setIsLoading(true);
         await reorderStanzas(oldIndex, newIndex);
-        setIsLoading(false);
         toast.success("Stanza order updated");
       }
     }
@@ -264,7 +262,10 @@ export const EditPoem = () => {
                     />
                     <div className="flex justify-end mt-3 space-x-2">
                       <button 
-                        onClick={() => setEditingTitle(false)}
+                        onClick={() => {
+                          setEditingTitle(false);
+                          setTitleText(poemTitle); // Reset to current title
+                        }}
                         className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
                       >
                         Cancel
@@ -278,7 +279,9 @@ export const EditPoem = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-xl text-slate-200 font-medium">{titleText}</div>
+                  <div className="text-xl text-slate-200 font-medium">
+                    {titleText || poemTitle || "Loading title..."}
+                  </div>
                 )}
               </div>
               

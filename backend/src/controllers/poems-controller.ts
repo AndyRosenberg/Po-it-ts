@@ -56,10 +56,17 @@ export const createPoem = async (request: Request, response: Response) => {
   }
 }
 
-// Get current user's own poems
+// Get current user's own poems with cursor-based pagination
 export const getMyPoems = async (request: Request, response: Response) => {
   try {
-    const poems = await prisma.poem.findMany({
+    const { cursor, limit = '10' } = request.query;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    
+    // Ensure reasonable limits
+    const finalLimit = Math.min(Math.max(limitNum, 1), 50);
+
+    // Base query
+    const baseQuery = {
       where: {
         userId: request.user.id
       },
@@ -69,23 +76,60 @@ export const getMyPoems = async (request: Request, response: Response) => {
       orderBy: {
         updatedAt: 'desc'
       }
+    };
+
+    // Add cursor if provided
+    const queryWithCursor = cursor
+      ? {
+          ...baseQuery,
+          cursor: {
+            id: cursor as string
+          },
+          skip: 1, // Skip the cursor item
+        }
+      : baseQuery;
+
+    // Execute the query with pagination
+    const poems = await prisma.poem.findMany({
+      ...queryWithCursor,
+      take: finalLimit + 1, // Take one extra to determine if there are more results
     });
 
-    if (!poems) {
-      return response.status(200).json([]);
-    }
+    // Determine if there are more results and the next cursor
+    const hasMore = poems.length > finalLimit;
+    const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
+    const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
 
-    response.status(200).json(poems);
+    // Get total count for reference (optional)
+    const totalCount = await prisma.poem.count({
+      where: {
+        userId: request.user.id
+      }
+    });
+
+    // Return the paginated response
+    response.status(200).json({
+      poems: paginatedPoems,
+      nextCursor,
+      totalCount
+    });
   } catch (error: any) {
     console.error("Error in getMyPoems: ", error.message);
     response.status(500).json({ error: "Internal server error" });
   }
 }
 
-// Get all poems from all users
+// Get all poems from all users with cursor-based pagination
 export const getAllPoems = async (request: Request, response: Response) => {
   try {
-    const poems = await prisma.poem.findMany({
+    const { cursor, limit = '10' } = request.query;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    
+    // Ensure reasonable limits
+    const finalLimit = Math.min(Math.max(limitNum, 1), 50);
+
+    // Base query
+    const baseQuery = {
       include: {
         stanzas: true,
         user: {
@@ -99,9 +143,46 @@ export const getAllPoems = async (request: Request, response: Response) => {
       orderBy: {
         updatedAt: 'desc'
       }
+    };
+
+    // Add cursor if provided
+    const queryWithCursor = cursor
+      ? {
+          ...baseQuery,
+          cursor: {
+            id: cursor as string
+          },
+          skip: 1, // Skip the cursor item
+        }
+      : baseQuery;
+
+    // Execute the query with pagination
+    const poems = await prisma.poem.findMany({
+      ...queryWithCursor,
+      take: finalLimit + 1, // Take one extra to determine if there are more results
     });
 
-    response.status(200).json(poems);
+    // Determine if there are more results and the next cursor
+    const hasMore = poems.length > finalLimit;
+    const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
+    
+    // Set isOwner flag for each poem
+    const poemsWithOwnership = paginatedPoems.map(poem => ({
+      ...poem,
+      isOwner: poem.userId === request.user.id
+    }));
+    
+    const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
+
+    // Get total count for reference (optional)
+    const totalCount = await prisma.poem.count();
+
+    // Return the paginated response
+    response.status(200).json({
+      poems: poemsWithOwnership,
+      nextCursor,
+      totalCount
+    });
   } catch (error: any) {
     console.error("Error in getAllPoems: ", error.message);
     response.status(500).json({ error: "Internal server error" });

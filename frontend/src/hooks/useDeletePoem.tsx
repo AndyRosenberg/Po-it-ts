@@ -1,19 +1,15 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useDeletePoem = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const deletePoem = async (poemId: string) => {
-    if (!poemId) return false;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const { mutate: deletePoem, isPending: isLoading, error } = useMutation({
+    mutationFn: async (poemId: string) => {
+      if (!poemId) throw new Error('Poem ID is required');
+      
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -24,23 +20,24 @@ export const useDeletePoem = () => {
         throw new Error(data.error || 'Failed to delete poem');
       }
       
-      // Success - navigate back to poems list
+      return true;
+    },
+    onSuccess: () => {
       toast.success('Poem deleted successfully');
       navigate('/');
-      return true;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to delete poem';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
+      
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+      queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete poem');
     }
-  };
+  });
 
   return {
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     deletePoem
   };
 };

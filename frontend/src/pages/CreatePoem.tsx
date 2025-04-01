@@ -120,7 +120,7 @@ export const CreatePoem = () => {
   const { 
     stanzas, 
     isLoading, 
-    error,
+    error: errorMsg,
     poemTitle,
     addStanza, 
     updateStanza, 
@@ -168,8 +168,13 @@ export const CreatePoem = () => {
 
   const handleTitleUpdate = async () => {
     if (titleText.trim()) {
-      await updateTitle(titleText);
-      setEditingTitle(false);
+      try {
+        await updateTitle(titleText);
+        setEditingTitle(false);
+      } catch (error) {
+        console.error("Error updating title:", error);
+        // Error is already handled by the hook and will appear in the errorMsg display
+      }
     }
   };
 
@@ -204,9 +209,9 @@ export const CreatePoem = () => {
         </header>
         
         {/* Error display */}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
-            {error}
+            {errorMsg}
           </div>
         )}
         

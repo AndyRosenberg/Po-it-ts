@@ -1,12 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { usePublicPoems, Poem } from "../hooks/usePoems";
 
 export const PublicPoems = () => {
   useAuthRedirect();
-  const { poems, isLoading, error } = usePublicPoems();
+  const { 
+    poems, 
+    isLoading, 
+    error, 
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesCount
+  } = usePublicPoems(12); // Fetch 12 items per page
+  
+  // Set up infinite scrolling
+  const observerTarget = useRef(null);
+
+  const handleObserver = useCallback(
+    (entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]
+  );
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Set up the observer effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+    });
+    
+    const currentTarget = observerTarget.current;
+    if (currentTarget) observer.observe(currentTarget);
+    
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [handleObserver]);
 
   // Filter poems based on search query
   const filteredPoems = searchQuery.trim()
@@ -147,6 +184,21 @@ export const PublicPoems = () => {
                     </div>
                   </Link>
                 ))
+              )}
+              
+              {/* Loading indicator at the bottom for infinite scroll */}
+              {!searchQuery && (
+                <div 
+                  ref={observerTarget}
+                  className="md:col-span-2 py-8 flex justify-center"
+                >
+                  {isFetchingNextPage && (
+                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
+                  )}
+                  {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
+                    <p className="text-slate-500 text-sm">No more poems to load</p>
+                  )}
+                </div>
               )}
             </div>
           )}

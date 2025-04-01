@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 
 interface Stanza {
   id: string;
@@ -26,86 +26,122 @@ export interface Poem {
   isOwner?: boolean;
 }
 
-// Hook for fetching user's own poems
-export const useMyPoems = () => {
-  const [poems, setPoems] = useState<Poem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export interface PaginatedResponse {
+  poems: Poem[];
+  nextCursor: string | null;
+  totalCount: number;
+}
 
-  const fetchPoems = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/my-poems`, {
+// Hook for fetching user's own poems with pagination and infinite scroll
+export const useMyPoems = (pageSize = 10) => {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ['my-poems', pageSize],
+    queryFn: async ({ pageParam = '' }) => {
+      const url = new URL(`${process.env.HOST_DOMAIN}/api/my-poems`);
+      url.searchParams.append('limit', pageSize.toString());
+      if (pageParam) {
+        url.searchParams.append('cursor', pageParam);
+      }
+      
+      console.log(`Fetching my poems with cursor: ${pageParam}, limit: ${pageSize}`);
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
       });
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch poems');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch poems');
       }
       
-      const data = await response.json();
-      setPoems(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Function to manually refetch poems
-  const refetch = () => {
-    fetchPoems();
-  };
-  
-  useEffect(() => {
-    fetchPoems();
-  }, []);
+      return await response.json() as PaginatedResponse;
+    },
+    getNextPageParam: (lastPage) => {
+      console.log('Next cursor:', lastPage.nextCursor);
+      return lastPage.nextCursor || undefined;
+    },
+    initialPageParam: '',
+  });
 
-  return { poems, isLoading, error, refetch };
+  // Flatten the pages into a single list of poems
+  const poems = data?.pages.flatMap(page => page.poems) || [];
+  
+  // Count the number of pages that have been loaded
+  const pagesCount = data?.pages.length || 0;
+  
+  return { 
+    poems, 
+    isLoading, 
+    error, 
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesCount
+  };
 };
 
-// Hook for fetching all public poems
-export const usePublicPoems = () => {
-  const [poems, setPoems] = useState<Poem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPoems = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
+// Hook for fetching all public poems with pagination and infinite scroll
+export const usePublicPoems = (pageSize = 10) => {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ['public-poems', pageSize],
+    queryFn: async ({ pageParam = '' }) => {
+      const url = new URL(`${process.env.HOST_DOMAIN}/api/poems`);
+      url.searchParams.append('limit', pageSize.toString());
+      if (pageParam) {
+        url.searchParams.append('cursor', pageParam);
+      }
+      
+      console.log(`Fetching public poems with cursor: ${pageParam}, limit: ${pageSize}`);
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
       });
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch poems');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch poems');
       }
       
-      const data = await response.json();
-      setPoems(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Function to manually refetch poems
-  const refetch = () => {
-    fetchPoems();
-  };
-  
-  useEffect(() => {
-    fetchPoems();
-  }, []);
+      return await response.json() as PaginatedResponse;
+    },
+    getNextPageParam: (lastPage) => {
+      console.log('Next cursor:', lastPage.nextCursor);
+      return lastPage.nextCursor || undefined;
+    },
+    initialPageParam: '',
+  });
 
-  return { poems, isLoading, error, refetch };
+  // Flatten the pages into a single list of poems
+  const poems = data?.pages.flatMap(page => page.poems) || [];
+  
+  // Count the number of pages that have been loaded
+  const pagesCount = data?.pages.length || 0;
+  
+  return { 
+    poems, 
+    isLoading, 
+    error, 
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesCount
+  };
 };

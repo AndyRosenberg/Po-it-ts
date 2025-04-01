@@ -1,4 +1,5 @@
-import { createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type AuthUserType = {
   id: string;
@@ -9,7 +10,7 @@ type AuthUserType = {
 
 interface AuthContextParams {
   authUser: AuthUserType | null;
-  setAuthUser: Dispatch<SetStateAction<AuthUserType | null>>;
+  setAuthUser: (user: AuthUserType | null) => void;
   isLoading: boolean;
 }
 
@@ -20,37 +21,47 @@ export const AuthContext = createContext<AuthContextParams>({
 });
 
 export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
-  const [authUser, setAuthUser] = useState<AuthUserType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchAuthUser = async () => {
+  const { data: authUser, isLoading } = useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
       try {
         const meResponse = await fetch(`${process.env.HOST_DOMAIN}/api/auth/me`, {
           method: 'GET',
-          credentials: 'include',  // Include credentials in the request
+          credentials: 'include',
         });
         const data = await meResponse.json();
-  
+
         if (!meResponse.ok) {
           throw new Error(data.error);
         }
-  
-        setAuthUser(data);
+
+        return data;
       } catch (error: any) {
         console.error(error.message);
-      } finally {
-        setIsLoading(false);
+        return null;
       }
-    }
+    },
+    staleTime: Infinity, // Auth data doesn't change often
+    retry: false,
+  });
 
-    fetchAuthUser();
-  }, []);
+  const setAuthUser = (user: AuthUserType | null) => {
+    queryClient.setQueryData(["auth-user"], user);
+  };
 
   return (
-    <AuthContext.Provider value={{ authUser, setAuthUser, isLoading }}>
+    <AuthContext.Provider value={{ authUser: authUser || null, setAuthUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthContext must be used within an AuthContextProvider");
+  }
+  return context;
+};
