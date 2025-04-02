@@ -1,9 +1,12 @@
 import toast from "react-hot-toast";
 import { useAuthContext } from "./useAuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtom } from 'jotai';
+import { userAtom } from '../atoms/userAtom';
 
 export const useLogout = () => {
   const { setAuthUser } = useAuthContext();
+  const [, setUser] = useAtom(userAtom);
   const queryClient = useQueryClient();
 
   const { mutate: logout, isPending: isLoading, error } = useMutation({
@@ -23,6 +26,7 @@ export const useLogout = () => {
     },
     onSuccess: () => {
       setAuthUser(null);
+      setUser(null); // Update Jotai state too
       queryClient.clear(); // Clear all query cache on logout
     },
     onError: (error: Error) => {

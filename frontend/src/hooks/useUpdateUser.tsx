@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuthContext } from './useAuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAtom } from 'jotai';
+import { userAtom } from '../atoms/userAtom';
 
 type UpdateUserData = {
   username?: string;
@@ -13,6 +15,7 @@ export const useUpdateUser = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { authUser, setAuthUser } = useAuthContext();
+  const [, setUser] = useAtom(userAtom);
   const queryClient = useQueryClient();
 
   const { mutate: updateUser, isPending: isLoading } = useMutation({
@@ -39,6 +42,7 @@ export const useUpdateUser = () => {
     },
     onSuccess: (data) => {
       setAuthUser(data);
+      setUser(data); // Update Jotai state
       queryClient.invalidateQueries({ queryKey: ['auth-user'] });
       setSuccess('Settings updated successfully');
     },

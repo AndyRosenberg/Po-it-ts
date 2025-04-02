@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useUpdateUser } from "../hooks/useUpdateUser";
 import { Link } from "react-router-dom";
+import { UserAvatar } from "../components/UserAvatar";
 
 export const Settings = () => {
   useAuthRedirect();
@@ -23,10 +24,7 @@ export const Settings = () => {
     }
   }, [authUser]);
 
-  // Get initials from username
-  const initials = authUser?.username 
-    ? authUser.username.split(' ').map(name => name[0]).join('').toUpperCase().substring(0, 2)
-    : 'U';
+  // No longer need to calculate initials here
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,11 +72,7 @@ export const Settings = () => {
               <Link to="/explore" className="text-slate-300 hover:text-white transition-colors">
                 Explore
               </Link>
-              <div className="relative">
-                <div className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-800/40 hover:bg-slate-700/60 transition-colors">
-                  <span className="text-sm font-medium">{initials}</span>
-                </div>
-              </div>
+              <UserAvatar />
             </div>
           </div>
         </header>
