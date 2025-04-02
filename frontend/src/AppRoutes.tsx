@@ -6,6 +6,7 @@ import { CreatePoem } from "./pages/CreatePoem";
 import { ViewPoem } from "./pages/ViewPoem";
 import { EditPoem } from "./pages/EditPoem";
 import { PublicPoems } from "./pages/PublicPoems";
+import { Settings } from "./pages/Settings";
 
 export const AppRoutes = () => (
   <Routes>
@@ -16,5 +17,6 @@ export const AppRoutes = () => (
     <Route path="/poems/:poemId" element={<ViewPoem />} />
     <Route path="/poems/:poemId/edit" element={<EditPoem />} />
     <Route path="/explore" element={<PublicPoems />} />
+    <Route path="/settings" element={<Settings />} />
   </Routes>
 )

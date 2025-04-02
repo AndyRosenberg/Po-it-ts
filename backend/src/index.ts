@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import authRoutes from './routes/auth-routes.js';
 import poemRoutes from './routes/poem-routes.js';
+import userRoutes from './routes/user-routes.js';
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -18,6 +19,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api", poemRoutes);
 
 app.listen(5000, () => {
