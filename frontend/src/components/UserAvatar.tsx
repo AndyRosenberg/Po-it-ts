@@ -42,7 +42,7 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
         onClick={() => setIsOpen(!isOpen)}
         className={`inline-flex items-center justify-center rounded-full h-10 w-10 ${
           highlight ? 'bg-cyan-800/40 hover:bg-cyan-700/60' : 'bg-slate-800/40 hover:bg-slate-700/60'
-        } transition-colors`}
+        } transition-colors cursor-pointer`}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -60,14 +60,14 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
           </div>
           <Link 
             to="/settings" 
-            className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             Settings
           </Link>
           <button 
             onClick={handleLogout}
-            className="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
           >
             Logout
           </button>
