@@ -68,6 +68,12 @@ export const Login = () => {
 							>
 								Don't have an account?
 							</Link>
+							<Link
+								to="/forgot-password"
+								className="text-sm text-slate-300 hover:text-cyan-400 transition-colors"
+							>
+								Forgot password?
+							</Link>
 						</div>
 
 						<button 
