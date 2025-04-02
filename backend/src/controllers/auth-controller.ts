@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { expireToken, generateToken } from '../utils/generate-token.js';
 import { sendPasswordResetEmail } from '../utils/email-service.js';
+import { isValidEmail } from '../utils/validation.js';
 
 export const getMe = async (request: Request, response: Response) => {
   try {
@@ -35,6 +36,11 @@ export const signup = async (request: Request, response: Response) => {
 
     if (password !== confirmPassword) {
       return response.status(400).json({ error: "Passwords don't match" }); 
+    }
+    
+    // Validate that username doesn't look like an email
+    if (isValidEmail(username)) {
+      return response.status(400).json({ error: "Username cannot be in email format" });
     }
 
     const user = await prisma.user.findUnique({ where: { username }});
@@ -76,9 +82,15 @@ export const signup = async (request: Request, response: Response) => {
 export const login = async (request: Request, response: Response) => {
   const invalidCredentials = () => response.status(404).json({ error: "Invalid Credentials" });
   try {
-    const { username, password } = request.body;
+    const { usernameOrEmail, password } = request.body;
 
-    const user = await prisma.user.findUnique({ where: { username } });
+    // Check if input is an email
+    const isEmail = isValidEmail(usernameOrEmail);
+    
+    // Search by username or email based on input format
+    const user = isEmail 
+      ? await prisma.user.findUnique({ where: { email: usernameOrEmail } })
+      : await prisma.user.findUnique({ where: { username: usernameOrEmail } });
 
     if (!user) {
       return invalidCredentials();

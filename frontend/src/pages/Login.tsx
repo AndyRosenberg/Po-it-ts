@@ -6,7 +6,7 @@ import { useLogin } from "../hooks/useLogin";
 export const Login = () => {
 	useAuthRedirect("/");
 
-	const [inputs, setInputs] = useState({ username: "", password: "" });
+	const [inputs, setInputs] = useState({ usernameOrEmail: "", password: "" });
 	const { login, loading } = useLogin();
 
 	const handleSubmit = (event: React.FormEvent) => {
@@ -33,15 +33,15 @@ export const Login = () => {
 					<form onSubmit={handleSubmit} className="space-y-5">
 						<div className="space-y-2">
 							<label className="block text-sm font-medium pl-1">
-								Username
+								Username or Email
 							</label>
 							<div className="relative">
 								<input 
 									type="text" 
-									placeholder="Enter username" 
+									placeholder="Enter username or email" 
 									className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
-									value={inputs.username} 
-									onChange={(e) => setInputs({...inputs, username: e.target.value})} 
+									value={inputs.usernameOrEmail} 
+									onChange={(e) => setInputs({...inputs, usernameOrEmail: e.target.value})} 
 								/>
 							</div>
 						</div>

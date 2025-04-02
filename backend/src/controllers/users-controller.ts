@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../db/prisma.js';
 import bcryptjs from "bcryptjs";
+import { isValidEmail } from '../utils/validation.js';
 
 export const updateUser = async (request: Request, response: Response) => {
   try {
@@ -21,8 +22,13 @@ export const updateUser = async (request: Request, response: Response) => {
       }
     }
 
-    // Check if new username is unique
+    // Check if new username is unique and not in email format
     if (username && username !== user.username) {
+      // Validate that username doesn't look like an email
+      if (isValidEmail(username)) {
+        return response.status(400).json({ error: "Username cannot be in email format" });
+      }
+
       const existingUser = await prisma.user.findUnique({ where: { username } });
       if (existingUser) {
         return response.status(400).json({ error: "Username already exists" });

@@ -5,7 +5,7 @@ import { useAtom } from 'jotai';
 import { userAtom } from '../atoms/userAtom';
 
 export type LoginInputs = {
-  username: string;
+  usernameOrEmail: string;
   password: string;
 }
 
