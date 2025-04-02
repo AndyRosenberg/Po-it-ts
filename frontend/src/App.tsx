@@ -24,7 +24,7 @@ function App() {
       </div>
       
       {/* Main content */}
-      <div className="relative flex items-center justify-center h-full w-full" style={{width: "100vw"}}>
+      <div className="relative flex items-center justify-center h-full w-full" style={{minWidth: "100vw", minHeight: "100vh"}}>
         <div className="w-full h-full flex items-center justify-center px-4 py-8 overflow-y-auto">
           <AppRoutes />
         </div>
