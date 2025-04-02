@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch backend/src --exec tsx backend/src/index.ts"
+    "dev": "nodemon --watch backend/src --exec tsx backend/src/index.ts",
+    "repl": "tsx --tsconfig tsconfig.json"
   },
   "type": "module",
   "keywords": [],
@@ -18,7 +19,7 @@
     "@types/jsonwebtoken": "^9.0.8",
     "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.9",
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3"
   },
   "dependencies": {
