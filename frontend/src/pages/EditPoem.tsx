@@ -4,6 +4,7 @@ import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useEditPoem } from '../hooks/useEditPoem';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
+import { BackButton } from '../components/BackButton';
 import { 
   DndContext, 
   closestCenter, 
@@ -196,14 +197,7 @@ export const EditPoem = () => {
         <header className="py-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate(`/poems/${poemId}`)}
-                className="text-slate-300 hover:text-white transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-              </button>
+              <BackButton />
               <h1 className="text-2xl font-bold text-white">Edit Poem</h1>
             </div>
             
