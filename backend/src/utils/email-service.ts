@@ -61,21 +61,7 @@ export const sendPasswordResetEmail = async (
     };
     
     // Send the email
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log('Password reset email sent:', info.messageId);
-    
-    // For development, log the preview URL (when using Ethereal)
-    if (process.env.NODE_ENV !== 'production' && info.messageId) {
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      console.log('Preview URL:', previewUrl);
-      
-      // If this is from our test route, return the preview URL too
-      if (email === 'test@example.com') {
-        console.log('Test email preview URL:', previewUrl);
-      }
-    }
-    
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
     console.error('Error sending password reset email:', error);

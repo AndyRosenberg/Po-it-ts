@@ -142,7 +142,6 @@ export const EditPoem = () => {
   
   // Keep titleText in sync with poemTitle
   useEffect(() => {
-    console.log("PoemTitle updated:", poemTitle);
     setTitleText(poemTitle);
   }, [poemTitle]);
 

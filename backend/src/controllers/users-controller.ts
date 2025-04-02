@@ -59,7 +59,6 @@ export const updateUser = async (request: Request, response: Response) => {
       profilePic: updatedUser.profilePic
     });
   } catch (error: any) {
-    console.log("Error in updateUser action", error.message);
     response.status(500).json({ error: "Internal Server Error" });
   }
 };

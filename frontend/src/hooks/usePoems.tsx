@@ -50,8 +50,7 @@ export const useMyPoems = (pageSize = 10) => {
       if (pageParam) {
         url.searchParams.append('cursor', pageParam);
       }
-      
-      console.log(`Fetching my poems with cursor: ${pageParam}, limit: ${pageSize}`);
+
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
@@ -65,7 +64,6 @@ export const useMyPoems = (pageSize = 10) => {
       return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
-      console.log('Next cursor:', lastPage.nextCursor);
       return lastPage.nextCursor || undefined;
     },
     initialPageParam: '',
@@ -107,8 +105,7 @@ export const usePublicPoems = (pageSize = 10) => {
       if (pageParam) {
         url.searchParams.append('cursor', pageParam);
       }
-      
-      console.log(`Fetching public poems with cursor: ${pageParam}, limit: ${pageSize}`);
+
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
@@ -122,7 +119,6 @@ export const usePublicPoems = (pageSize = 10) => {
       return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
-      console.log('Next cursor:', lastPage.nextCursor);
       return lastPage.nextCursor || undefined;
     },
     initialPageParam: '',

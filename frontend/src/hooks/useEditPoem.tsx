@@ -47,7 +47,6 @@ export const useEditPoem = () => {
       }
       
       const poemData = await response.json();
-      console.log("Poem data fetched:", poemData);
       return poemData as Poem;
     }
   });
@@ -55,7 +54,6 @@ export const useEditPoem = () => {
   // Handle success and error effects separately
   useEffect(() => {
     if (poemData) {
-      console.log("Setting poem data:", poemData.title);
       setPoemTitle(poemData.title);
       setStanzas(poemData.stanzas);
       
