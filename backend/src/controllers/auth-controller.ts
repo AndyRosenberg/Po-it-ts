@@ -189,8 +189,6 @@ export const resetPassword = async (request: Request, response: Response) => {
     }
     
     // Hash the new password
-    console.log("PASSWORD IS: ", password, user.email);
-    console.log('trimmed is', password === password.trim())
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
     
