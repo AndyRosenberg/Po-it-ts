@@ -6,6 +6,7 @@ import { Poem } from '../hooks/usePoems';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
+import { CommentDrawer } from '../components/CommentDrawer';
 
 interface ExtendedPoem extends Poem {
   isOwner?: boolean;
@@ -25,6 +26,11 @@ export const ViewPoem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { deletePoem, isLoading: isDeleting, error: deleteError } = useDeletePoem();
+  
+  // Comment drawer state
+  const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
+  const [selectedStanzaId, setSelectedStanzaId] = useState<string | null>(null);
+  const [selectedStanzaText, setSelectedStanzaText] = useState('');
 
   useEffect(() => {
     const fetchPoem = async () => {
@@ -63,9 +69,32 @@ export const ViewPoem = () => {
         day: 'numeric',
       })
     : '';
+    
+  // Handler for opening comment drawer
+  const handleOpenCommentsDrawer = (stanzaId: string, stanzaText: string) => {
+    setSelectedStanzaId(stanzaId);
+    setSelectedStanzaText(stanzaText);
+    setIsCommentDrawerOpen(true);
+  };
+  
+  // Handler for closing comment drawer
+  const handleCloseCommentsDrawer = () => {
+    setIsCommentDrawerOpen(false);
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4">
+      {/* Comment Drawer */}
+      {selectedStanzaId && (
+        <CommentDrawer
+          isOpen={isCommentDrawerOpen}
+          onClose={handleCloseCommentsDrawer}
+          commentableType="Stanza"
+          commentableId={selectedStanzaId}
+          stanzaText={selectedStanzaText}
+        />
+      )}
+      
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
         <header className="py-6 mb-8">
@@ -109,7 +138,11 @@ export const ViewPoem = () => {
               
               <div className="space-y-8">
                 {poem.stanzas.map((stanza) => (
-                  <div key={stanza.id} className="leading-relaxed whitespace-pre-wrap text-slate-200">
+                  <div 
+                    key={stanza.id} 
+                    onClick={() => handleOpenCommentsDrawer(stanza.id, stanza.body)}
+                    className="leading-relaxed whitespace-pre-wrap text-slate-200 p-3 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                  >
                     {stanza.body}
                   </div>
                 ))}
