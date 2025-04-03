@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAtomValue } from "jotai";
-import { userAtom, getUserInitials } from "../atoms/userAtom";
+import { useAuthContext } from "../hooks/useAuthContext";
+import { getUserInitials } from "../utils/user-utils";
 import { useLogout } from "../hooks/useLogout";
 
 type UserAvatarProps = {
@@ -9,7 +9,7 @@ type UserAvatarProps = {
 };
 
 export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
-  const user = useAtomValue(userAtom);
+  const { authUser: user } = useAuthContext();
   const { logout } = useLogout();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);

@@ -1,7 +1,12 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { userAtom, UserType } from "../atoms/userAtom";
-import { useAtom } from "jotai";
+
+export type UserType = {
+  id: string;
+  email: string;
+  username: string;
+  profilePic: string;
+} | null;
 
 interface AuthContextParams {
   authUser: UserType;
@@ -17,7 +22,6 @@ export const AuthContext = createContext<AuthContextParams>({
 
 export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
-  const [user, setUser] = useAtom(userAtom);
 
   const { data: authUser, isLoading } = useQuery({
     queryKey: ["auth-user"],
@@ -43,14 +47,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     retry: false,
   });
 
-  // Sync authUser with Jotai atom
-  useEffect(() => {
-    setUser(authUser || null);
-  }, [authUser, setUser]);
-
   const setAuthUser = (user: UserType) => {
     queryClient.setQueryData(["auth-user"], user);
-    setUser(user);
   };
 
   return (

@@ -1,8 +1,6 @@
 import { useAuthContext } from "./useAuthContext";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
-import { useAtom } from 'jotai';
-import { userAtom } from '../atoms/userAtom';
 
 export type SignupInputs = {
   email: string;
@@ -13,7 +11,6 @@ export type SignupInputs = {
 
 export const useSignup = () => {
   const { setAuthUser } = useAuthContext();
-  const [, setUser] = useAtom(userAtom);
 
   const { mutate: signup, isPending: loading, error } = useMutation({
     mutationFn: async (inputs: SignupInputs) => {
@@ -39,7 +36,6 @@ export const useSignup = () => {
     },
     onSuccess: (data) => {
       setAuthUser(data);
-      setUser(data); // Update Jotai state too
     },
     onError: (error: Error) => {
       console.error(error.message);
