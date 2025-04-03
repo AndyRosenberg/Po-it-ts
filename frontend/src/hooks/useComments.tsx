@@ -20,6 +20,7 @@ export const useComments = (commentableType: string, commentableId: string) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasComments, setHasComments] = useState(false);
   const { authUser } = useAuthContext();
 
   const fetchComments = async () => {
@@ -44,6 +45,7 @@ export const useComments = (commentableType: string, commentableId: string) => {
       
       const data = await response.json();
       setComments(data);
+      setHasComments(data.length > 0);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,6 +78,7 @@ export const useComments = (commentableType: string, commentableId: string) => {
       
       const newComment = await response.json();
       setComments(prevComments => [newComment, ...prevComments]);
+      setHasComments(true);
       
       return newComment;
     } catch (err: any) {
@@ -137,9 +140,12 @@ export const useComments = (commentableType: string, commentableId: string) => {
         throw new Error(data.error || 'Failed to delete comment');
       }
       
-      setComments(prevComments => 
-        prevComments.filter(comment => comment.id !== commentId)
-      );
+      const filteredComments = prevComments => prevComments.filter(comment => comment.id !== commentId);
+      setComments(filteredComments);
+      
+      // Update hasComments based on remaining comments
+      const remainingComments = filteredComments(comments);
+      setHasComments(remainingComments.length > 0);
       
       return true;
     } catch (err: any) {
@@ -160,6 +166,7 @@ export const useComments = (commentableType: string, commentableId: string) => {
     comments,
     isLoading,
     error,
+    hasComments,
     fetchComments,
     addComment,
     updateComment,

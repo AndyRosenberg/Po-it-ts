@@ -104,14 +104,15 @@ export const CommentDrawer = ({
 
   return (
     <div 
-      className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 transition-opacity ${
+      className={`fixed inset-0 z-50 ${
         isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
+      <div className="fixed inset-0 bg-black/50 transition-opacity"></div>
       <div
         ref={drawerRef}
-        className={`bg-slate-900 w-full sm:w-[600px] max-w-full h-[90vh] sm:h-[80vh] rounded-t-xl sm:rounded-xl shadow-lg transform transition-transform ${
-          isOpen ? 'translate-y-0' : 'translate-y-full sm:translate-y-8'
+        className={`fixed bottom-0 right-0 bg-slate-900 w-full sm:w-[400px] max-w-full h-[90vh] sm:h-[100vh] rounded-t-xl sm:rounded-l-xl shadow-lg transform transition-transform ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
         } flex flex-col overflow-hidden border border-slate-700`}
       >
         {/* Drawer handle for mobile */}

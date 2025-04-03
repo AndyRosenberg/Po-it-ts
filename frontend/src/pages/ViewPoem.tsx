@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useDeletePoem } from '../hooks/useDeletePoem';
@@ -31,6 +31,47 @@ export const ViewPoem = () => {
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
   const [selectedStanzaId, setSelectedStanzaId] = useState<string | null>(null);
   const [selectedStanzaText, setSelectedStanzaText] = useState('');
+  const [stanzasWithComments, setStanzasWithComments] = useState<Record<string, boolean>>({});
+  const [isCheckingComments, setIsCheckingComments] = useState(false);
+
+  // Function to check for comments in stanzas
+  const checkStanzaComments = useCallback(async (stanzas: any[]) => {
+    if (!stanzas || stanzas.length === 0) return;
+    
+    setIsCheckingComments(true);
+    const commentsCheck: Record<string, boolean> = {};
+    
+    try {
+      // Create an array of promises for fetching comment status for each stanza
+      const commentPromises = stanzas.map(async (stanza) => {
+        try {
+          const commentResponse = await fetch(
+            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}`,
+            {
+              method: 'GET',
+              credentials: 'include',
+            }
+          );
+          
+          if (commentResponse.ok) {
+            const commentsData = await commentResponse.json();
+            commentsCheck[stanza.id] = commentsData.length > 0;
+          }
+        } catch (error) {
+          console.error('Error checking comments:', error);
+          commentsCheck[stanza.id] = false;
+        }
+      });
+      
+      // Wait for all comment checks to complete
+      await Promise.all(commentPromises);
+      setStanzasWithComments(commentsCheck);
+    } catch (error) {
+      console.error('Error checking stanza comments:', error);
+    } finally {
+      setIsCheckingComments(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchPoem = async () => {
@@ -50,6 +91,11 @@ export const ViewPoem = () => {
         
         const data = await response.json();
         setPoem(data);
+        
+        // Check stanza comments immediately after fetching the poem
+        if (data && data.stanzas && data.stanzas.length > 0) {
+          await checkStanzaComments(data.stanzas);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -60,7 +106,17 @@ export const ViewPoem = () => {
     if (poemId) {
       fetchPoem();
     }
-  }, [poemId]);
+  }, [poemId, checkStanzaComments]);
+
+  // Refresh comments after comment drawer closes (to update UI if new comments were added)
+  const handleCloseCommentsDrawer = useCallback(() => {
+    setIsCommentDrawerOpen(false);
+    
+    // Re-check for comments when the drawer closes (in case comments were added/removed)
+    if (poem?.stanzas) {
+      checkStanzaComments(poem.stanzas);
+    }
+  }, [poem?.stanzas, checkStanzaComments]);
 
   const formattedDate = poem?.updatedAt 
     ? new Date(poem.updatedAt).toLocaleDateString('en-US', {
@@ -75,11 +131,6 @@ export const ViewPoem = () => {
     setSelectedStanzaId(stanzaId);
     setSelectedStanzaText(stanzaText);
     setIsCommentDrawerOpen(true);
-  };
-  
-  // Handler for closing comment drawer
-  const handleCloseCommentsDrawer = () => {
-    setIsCommentDrawerOpen(false);
   };
 
   return (
@@ -141,7 +192,9 @@ export const ViewPoem = () => {
                   <div 
                     key={stanza.id} 
                     onClick={() => handleOpenCommentsDrawer(stanza.id, stanza.body)}
-                    className="leading-relaxed whitespace-pre-wrap text-slate-200 p-3 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                    className={`leading-relaxed whitespace-pre-wrap text-slate-200 p-3 rounded-lg 
+                      hover:bg-slate-700/30 transition-colors cursor-pointer relative
+                      ${stanzasWithComments[stanza.id] ? 'border-l-4 border-cyan-500 pl-4' : ''}`}
                   >
                     {stanza.body}
                   </div>
