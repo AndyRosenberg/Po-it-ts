@@ -46,7 +46,8 @@ export const ViewPoem = () => {
       const commentPromises = stanzas.map(async (stanza) => {
         try {
           const commentResponse = await fetch(
-            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}`,
+            // Limit to 1 since we only need to know if any comments exist
+            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}?limit=1`,
             {
               method: 'GET',
               credentials: 'include',
@@ -54,8 +55,10 @@ export const ViewPoem = () => {
           );
           
           if (commentResponse.ok) {
-            const commentsData = await commentResponse.json();
-            commentsCheck[stanza.id] = commentsData.length > 0;
+            // Handle the new pagination response format
+            const responseData = await commentResponse.json();
+            // Check if totalCount is greater than 0
+            commentsCheck[stanza.id] = responseData.totalCount > 0;
           }
         } catch (error) {
           console.error('Error checking comments:', error);

@@ -12,7 +12,7 @@ export type SignupInputs = {
 export const useSignup = () => {
   const { setAuthUser } = useAuthContext();
 
-  const { mutate: signup, isPending: loading, error } = useMutation({
+  const { mutate: signup, isPending: loading } = useMutation({
     mutationFn: async (inputs: SignupInputs) => {
       const response = await fetch(
         `${process.env.HOST_DOMAIN}/api/auth/signup`,
@@ -43,5 +43,5 @@ export const useSignup = () => {
     }
   });
 
-  return { loading, signup, error };
+  return { loading, signup };
 }

@@ -22,6 +22,9 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import toast from 'react-hot-toast';
 
+// Maximum character count for stanzas
+const MAX_STANZA_CHARS = 300;
+
 interface StanzaCardProps {
   id: string;
   body: string;
@@ -32,6 +35,9 @@ interface StanzaCardProps {
 const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [stanzaText, setStanzaText] = useState(body);
+  const charCount = stanzaText.length;
+  const charsRemaining = MAX_STANZA_CHARS - charCount;
+  const isOverLimit = charCount > MAX_STANZA_CHARS;
   
   const { 
     attributes, 
@@ -46,9 +52,18 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
     transition
   };
   
+  const handleStanzaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    if (newText.length <= MAX_STANZA_CHARS) {
+      setStanzaText(newText);
+    }
+  };
+  
   const handleSave = () => {
-    onUpdate(id, stanzaText);
-    setIsEditing(false);
+    if (!isOverLimit) {
+      onUpdate(id, stanzaText);
+      setIsEditing(false);
+    }
   };
 
   return (
@@ -90,23 +105,36 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
       {isEditing ? (
         <div>
           <textarea
-            className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[100px]"
+            className={`w-full p-2 bg-slate-700 text-white border ${isOverLimit ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[100px]`}
             value={stanzaText}
-            onChange={(e) => setStanzaText(e.target.value)}
+            onChange={handleStanzaChange}
+            maxLength={MAX_STANZA_CHARS}
           />
-          <div className="flex justify-end mt-3 space-x-2">
-            <button 
-              onClick={() => setIsEditing(false)}
-              className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500"
-            >
-              Save
-            </button>
+          <div className="flex justify-between mt-3">
+            <div className={`text-sm ${
+              charsRemaining <= 30 
+                ? charsRemaining <= 10 
+                  ? 'text-red-400' 
+                  : 'text-yellow-400' 
+                : 'text-slate-400'
+            }`}>
+              {charsRemaining} characters remaining
+            </div>
+            <div className="space-x-2">
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className={`px-3 py-1 ${isOverLimit ? 'bg-slate-600 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-500'} text-white rounded-md`}
+                disabled={isOverLimit}
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -311,16 +339,31 @@ export const EditPoem = () => {
               <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 shadow-lg">
                 <h3 className="text-lg font-medium text-white mb-3">Add a new stanza</h3>
                 <textarea
-                  className="w-full p-3 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]"
+                  className={`w-full p-3 bg-slate-700 text-white border ${newStanzaText.length > MAX_STANZA_CHARS ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]`}
                   placeholder="Write your stanza here..."
                   value={newStanzaText}
-                  onChange={(e) => setNewStanzaText(e.target.value)}
+                  onChange={(e) => {
+                    const newText = e.target.value;
+                    if (newText.length <= MAX_STANZA_CHARS) {
+                      setNewStanzaText(newText);
+                    }
+                  }}
+                  maxLength={MAX_STANZA_CHARS}
                 />
+                <div className={`text-sm mt-2 ${
+                  MAX_STANZA_CHARS - newStanzaText.length <= 30 
+                    ? MAX_STANZA_CHARS - newStanzaText.length <= 10 
+                      ? 'text-red-400' 
+                      : 'text-yellow-400' 
+                    : 'text-slate-400'
+                }`}>
+                  {MAX_STANZA_CHARS - newStanzaText.length} characters remaining
+                </div>
                 <div className="flex justify-end mt-4">
                   <button 
                     onClick={handleAddStanza}
                     className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading || !newStanzaText.trim()}
+                    disabled={isLoading || !newStanzaText.trim() || newStanzaText.length > MAX_STANZA_CHARS}
                   >
                     {isLoading ? 'Adding...' : 'Add Stanza'}
                   </button>
