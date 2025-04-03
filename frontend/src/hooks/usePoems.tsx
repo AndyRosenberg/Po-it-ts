@@ -15,6 +15,19 @@ interface User {
   profilePic: string;
 }
 
+export interface StanzaMatch {
+  id: string;
+  position: number;
+  snippet: string;
+  matchIndex: number;
+}
+
+export interface SearchMatches {
+  titleMatch?: boolean;
+  usernameMatch?: boolean;
+  matchingStanzas: StanzaMatch[];
+}
+
 export interface Poem {
   id: string;
   title: string;
@@ -24,6 +37,7 @@ export interface Poem {
   stanzas: Stanza[];
   user?: User;
   isOwner?: boolean;
+  searchMatches?: SearchMatches;
 }
 
 export interface PaginatedResponse {
@@ -32,8 +46,8 @@ export interface PaginatedResponse {
   totalCount: number;
 }
 
-// Hook for fetching user's own poems with pagination and infinite scroll
-export const useMyPoems = (pageSize = 10) => {
+// Hook for fetching user's own poems with pagination, infinite scroll, and search
+export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
   const {
     data,
     fetchNextPage,
@@ -43,12 +57,15 @@ export const useMyPoems = (pageSize = 10) => {
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['my-poems', pageSize],
+    queryKey: ['my-poems', pageSize, searchQuery],
     queryFn: async ({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/my-poems`);
       url.searchParams.append('limit', pageSize.toString());
       if (pageParam) {
         url.searchParams.append('cursor', pageParam);
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
       }
 
       const response = await fetch(url, {
@@ -87,8 +104,8 @@ export const useMyPoems = (pageSize = 10) => {
   };
 };
 
-// Hook for fetching all public poems with pagination and infinite scroll
-export const usePublicPoems = (pageSize = 10) => {
+// Hook for fetching all public poems with pagination, infinite scroll, and search
+export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
   const {
     data,
     fetchNextPage,
@@ -98,12 +115,15 @@ export const usePublicPoems = (pageSize = 10) => {
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['public-poems', pageSize],
+    queryKey: ['public-poems', pageSize, searchQuery],
     queryFn: async ({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/poems`);
       url.searchParams.append('limit', pageSize.toString());
       if (pageParam) {
         url.searchParams.append('cursor', pageParam);
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
       }
 
       const response = await fetch(url, {

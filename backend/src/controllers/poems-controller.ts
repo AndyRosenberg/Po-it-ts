@@ -57,20 +57,52 @@ export const createPoem = async (request: Request, response: Response) => {
   }
 }
 
-// Get current user's own poems with cursor-based pagination
+// Get current user's own poems with cursor-based pagination and fuzzy search
 export const getMyPoems = async (request: Request, response: Response) => {
   try {
-    const { cursor, limit = '10' } = request.query;
+    const { cursor, limit = '10', search } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
     
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
     // Base query
+    let whereClause: any = {
+      userId: request.user.id
+    };
+    
+    let isSearchQuery = false;
+
+    // Add search criteria if provided
+    if (search && typeof search === 'string' && search.trim()) {
+      isSearchQuery = true;
+      // Use PostgreSQL's trigram similarity for fuzzy matching
+      whereClause = {
+        ...whereClause,
+        OR: [
+          {
+            title: {
+              contains: search.trim(),
+              mode: 'insensitive'
+            }
+          },
+          {
+            stanzas: {
+              some: {
+                body: {
+                  contains: search.trim(),
+                  mode: 'insensitive'
+                }
+              }
+            }
+          }
+        ]
+      };
+    }
+
+    // Base query
     const baseQuery = {
-      where: {
-        userId: request.user.id
-      },
+      where: whereClause,
       include: {
         stanzas: true
       },
@@ -103,14 +135,57 @@ export const getMyPoems = async (request: Request, response: Response) => {
 
     // Get total count for reference (optional)
     const totalCount = await prisma.poem.count({
-      where: {
-        userId: request.user.id
-      }
+      where: whereClause
     });
+    
+    // Add search match information
+    let poemsWithSearchMatches = paginatedPoems;
+    
+    if (isSearchQuery && search) {
+      const searchTerm = search.toString().trim().toLowerCase();
+      
+      poemsWithSearchMatches = paginatedPoems.map(poem => {
+        // Find matches in title
+        const titleMatch = poem.title.toLowerCase().includes(searchTerm);
+        
+        // Find matches in stanzas
+        const matchingStanzas = poem.stanzas
+          .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
+          .map(stanza => {
+            // Get a snippet of text around the match
+            const stanzaText = stanza.body;
+            const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
+            
+            // Get context around the match (up to 50 chars before and after)
+            const startIndex = Math.max(0, matchIndex - 50);
+            const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
+            let snippet = stanzaText.substring(startIndex, endIndex);
+            
+            // Add ellipsis if we trimmed the text
+            if (startIndex > 0) snippet = '...' + snippet;
+            if (endIndex < stanzaText.length) snippet = snippet + '...';
+            
+            return {
+              id: stanza.id,
+              position: stanza.position,
+              snippet,
+              matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
+            };
+          });
+        
+        return {
+          ...poem,
+          searchMatches: {
+            titleMatch,
+            matchingStanzas
+          }
+        };
+      });
+    }
 
     // Return the paginated response
     response.status(200).json({
-      poems: paginatedPoems,
+      poems: poemsWithSearchMatches,
       nextCursor,
       totalCount
     });
@@ -120,17 +195,57 @@ export const getMyPoems = async (request: Request, response: Response) => {
   }
 }
 
-// Get all poems from all users with cursor-based pagination
+// Get all poems from all users with cursor-based pagination and fuzzy search
 export const getAllPoems = async (request: Request, response: Response) => {
   try {
-    const { cursor, limit = '10' } = request.query;
+    const { cursor, limit = '10', search } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
     
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
+    // Base where clause
+    let whereClause: any = {};
+    
+    let isSearchQuery = false;
+
+    // Add search criteria if provided
+    if (search && typeof search === 'string' && search.trim()) {
+      isSearchQuery = true;
+      // Use PostgreSQL's trigram similarity for fuzzy matching
+      whereClause = {
+        OR: [
+          {
+            title: {
+              contains: search.trim(),
+              mode: 'insensitive'
+            }
+          },
+          {
+            stanzas: {
+              some: {
+                body: {
+                  contains: search.trim(),
+                  mode: 'insensitive'
+                }
+              }
+            }
+          },
+          {
+            user: {
+              username: {
+                contains: search.trim(),
+                mode: 'insensitive'
+              }
+            }
+          }
+        ]
+      };
+    }
+
     // Base query
     const baseQuery = {
+      where: whereClause,
       include: {
         stanzas: true,
         user: {
@@ -176,11 +291,62 @@ export const getAllPoems = async (request: Request, response: Response) => {
     const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
 
     // Get total count for reference (optional)
-    const totalCount = await prisma.poem.count();
+    const totalCount = await prisma.poem.count({
+      where: whereClause
+    });
+    
+    // Add search match information
+    let poemsWithSearchMatches = poemsWithOwnership;
+    
+    if (isSearchQuery && search) {
+      const searchTerm = search.toString().trim().toLowerCase();
+      
+      poemsWithSearchMatches = poemsWithOwnership.map(poem => {
+        // Find matches in title
+        const titleMatch = poem.title.toLowerCase().includes(searchTerm);
+        
+        // Find matches in username
+        const usernameMatch = poem.user && poem.user.username.toLowerCase().includes(searchTerm);
+        
+        // Find matches in stanzas
+        const matchingStanzas = poem.stanzas
+          .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
+          .map(stanza => {
+            // Get a snippet of text around the match
+            const stanzaText = stanza.body;
+            const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
+            
+            // Get context around the match (up to 50 chars before and after)
+            const startIndex = Math.max(0, matchIndex - 50);
+            const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
+            let snippet = stanzaText.substring(startIndex, endIndex);
+            
+            // Add ellipsis if we trimmed the text
+            if (startIndex > 0) snippet = '...' + snippet;
+            if (endIndex < stanzaText.length) snippet = snippet + '...';
+            
+            return {
+              id: stanza.id,
+              position: stanza.position,
+              snippet,
+              matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
+            };
+          });
+        
+        return {
+          ...poem,
+          searchMatches: {
+            titleMatch,
+            usernameMatch,
+            matchingStanzas
+          }
+        };
+      });
+    }
 
     // Return the paginated response
     response.status(200).json({
-      poems: poemsWithOwnership,
+      poems: poemsWithSearchMatches,
       nextCursor,
       totalCount
     });

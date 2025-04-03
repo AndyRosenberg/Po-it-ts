@@ -5,11 +5,25 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { useMyPoems, Poem } from "../hooks/usePoems";
 import { useDeletePoem } from "../hooks/useDeletePoem";
 import { UserAvatar } from "../components/UserAvatar";
+import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
 
 export const Home = () => {
   useAuthRedirect();
   const { authUser } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  
+  // Set up search debounce
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchQuery]);
+  
   const { 
     poems, 
     isLoading, 
@@ -19,7 +33,7 @@ export const Home = () => {
     hasNextPage,
     isFetchingNextPage,
     pagesCount
-  } = useMyPoems(12); // Fetch 12 items per page
+  } = useMyPoems(12, debouncedSearchQuery); // Fetch 12 items per page with search
   const { deletePoem, isLoading: isDeleting } = useDeletePoem();
   
   // Set up infinite scrolling
@@ -53,15 +67,8 @@ export const Home = () => {
     };
   }, [handleObserver]);
 
-  // Filter poems based on search query
-  const filteredPoems = searchQuery.trim()
-    ? poems.filter(poem => {
-        const stanzaText = poem.stanzas.map(s => s.body).join(' ').toLowerCase();
-        const titleText = poem.title.toLowerCase();
-        const searchTerm = searchQuery.toLowerCase();
-        return stanzaText.includes(searchTerm) || titleText.includes(searchTerm);
-      })
-    : poems;
+  // We no longer need client-side filtering as it's done server-side
+  const filteredPoems = poems;
 
   // Format preview text
   const formatPreview = (poem: Poem) => {
@@ -172,9 +179,17 @@ export const Home = () => {
                       <div className="mb-3 text-xs text-slate-500">
                         {new Date(poem.updatedAt).toLocaleDateString()}
                       </div>
-                      <div className="prose prose-slate prose-invert max-w-none mb-4 text-slate-300 line-clamp-4 whitespace-pre-wrap">
+                      <div className="prose prose-slate prose-invert max-w-none mb-2 text-slate-300 line-clamp-4 whitespace-pre-wrap">
                         {formatPreview(poem)}
                       </div>
+                      
+                      {/* Show search match highlights */}
+                      {debouncedSearchQuery && poem.searchMatches && (
+                        <SearchMatchHighlights 
+                          searchMatches={poem.searchMatches} 
+                          searchQuery={debouncedSearchQuery}
+                        />
+                      )}
                     </Link>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
@@ -212,19 +227,17 @@ export const Home = () => {
               )}
               
               {/* Loading indicator at the bottom for infinite scroll */}
-              {!searchQuery && (
-                <div 
-                  ref={observerTarget} 
-                  className="md:col-span-2 py-8 flex justify-center"
-                >
-                  {isFetchingNextPage && (
-                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-                  )}
-                  {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
-                    <p className="text-slate-500 text-sm">No more poems to load</p>
-                  )}
-                </div>
-              )}
+              <div 
+                ref={observerTarget} 
+                className="md:col-span-2 py-8 flex justify-center"
+              >
+                {isFetchingNextPage && (
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
+                )}
+                {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
+                  <p className="text-slate-500 text-sm">No more poems to load</p>
+                )}
+              </div>
             </div>
           )}
         </div>

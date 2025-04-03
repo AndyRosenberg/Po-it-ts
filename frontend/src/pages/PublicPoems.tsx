@@ -4,10 +4,25 @@ import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { usePublicPoems, Poem } from "../hooks/usePoems";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { UserAvatar } from "../components/UserAvatar";
+import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
 
 export const PublicPoems = () => {
   useAuthRedirect();
   const { authUser } = useAuthContext();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  
+  // Set up search debounce
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchQuery]);
+  
   const { 
     poems, 
     isLoading, 
@@ -15,8 +30,9 @@ export const PublicPoems = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    pagesCount
-  } = usePublicPoems(12); // Fetch 12 items per page
+    pagesCount,
+    refetch
+  } = usePublicPoems(12, debouncedSearchQuery); // Fetch 12 items per page with search query
   
   // Set up infinite scrolling
   const observerTarget = useRef(null);
@@ -30,7 +46,6 @@ export const PublicPoems = () => {
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]
   );
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Set up the observer effect
   useEffect(() => {
@@ -48,18 +63,8 @@ export const PublicPoems = () => {
     };
   }, [handleObserver]);
 
-  // Filter poems based on search query
-  const filteredPoems = searchQuery.trim()
-    ? poems.filter(poem => {
-        const stanzaText = poem.stanzas.map(s => s.body).join(' ').toLowerCase();
-        const titleText = poem.title.toLowerCase();
-        const authorText = poem.user?.username.toLowerCase() || '';
-        const searchTerm = searchQuery.toLowerCase();
-        return stanzaText.includes(searchTerm) || 
-               titleText.includes(searchTerm) || 
-               authorText.includes(searchTerm);
-      })
-    : poems;
+  // We no longer need client-side filtering as it's done server-side
+  const filteredPoems = poems;
 
   // Format preview text
   const formatPreview = (poem: Poem) => {
@@ -177,9 +182,17 @@ export const PublicPoems = () => {
                         </span>
                       )}
                     </div>
-                    <div className="prose prose-slate prose-invert max-w-none mb-4 text-slate-300 line-clamp-4 whitespace-pre-wrap">
+                    <div className="prose prose-slate prose-invert max-w-none mb-2 text-slate-300 line-clamp-4 whitespace-pre-wrap">
                       {formatPreview(poem)}
                     </div>
+                    
+                    {/* Show search match highlights */}
+                    {debouncedSearchQuery && poem.searchMatches && (
+                      <SearchMatchHighlights 
+                        searchMatches={poem.searchMatches} 
+                        searchQuery={debouncedSearchQuery}
+                      />
+                    )}
                     <div className="flex justify-between items-center text-xs text-slate-500">
                       <span>{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
                       {poem.isOwner && (
@@ -191,19 +204,17 @@ export const PublicPoems = () => {
               )}
               
               {/* Loading indicator at the bottom for infinite scroll */}
-              {!searchQuery && (
-                <div 
-                  ref={observerTarget}
-                  className="md:col-span-2 py-8 flex justify-center"
-                >
-                  {isFetchingNextPage && (
-                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-                  )}
-                  {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
-                    <p className="text-slate-500 text-sm">No more poems to load</p>
-                  )}
-                </div>
-              )}
+              <div 
+                ref={observerTarget}
+                className="md:col-span-2 py-8 flex justify-center"
+              >
+                {isFetchingNextPage && (
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
+                )}
+                {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
+                  <p className="text-slate-500 text-sm">No more poems to load</p>
+                )}
+              </div>
             </div>
           )}
         </div>

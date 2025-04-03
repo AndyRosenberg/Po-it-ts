@@ -7,6 +7,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { CommentDrawer } from '../components/CommentDrawer';
+import { ShareModal } from '../components/ShareModal';
 
 interface ExtendedPoem extends Poem {
   isOwner?: boolean;
@@ -33,6 +34,9 @@ export const ViewPoem = () => {
   const [selectedStanzaText, setSelectedStanzaText] = useState('');
   const [stanzasWithComments, setStanzasWithComments] = useState<Record<string, boolean>>({});
   const [isCheckingComments, setIsCheckingComments] = useState(false);
+  
+  // Share modal state
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Function to check for comments in stanzas
   const checkStanzaComments = useCallback(async (stanzas: any[]) => {
@@ -133,6 +137,11 @@ export const ViewPoem = () => {
     setIsCommentDrawerOpen(true);
   };
 
+  // Get current URL for sharing
+  const generateShareUrl = () => {
+    return window.location.href;
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto px-4">
       {/* Comment Drawer */}
@@ -145,6 +154,13 @@ export const ViewPoem = () => {
           stanzaText={selectedStanzaText}
         />
       )}
+      
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        url={generateShareUrl()}
+      />
       
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
@@ -239,7 +255,11 @@ export const ViewPoem = () => {
                       </button>
                     </>
                   )}
-                  <button className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700">
+                  <button 
+                    onClick={() => setIsShareModalOpen(true)} 
+                    className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
+                    aria-label="Share poem"
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185z" />
                     </svg>
