@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useDeletePoem } from '../hooks/useDeletePoem';
 import { Poem } from '../hooks/usePoems';
-import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { CommentDrawer } from '../components/CommentDrawer';
@@ -20,7 +19,6 @@ interface ExtendedPoem extends Poem {
 
 export const ViewPoem = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
   const { poemId } = useParams<{ poemId: string }>();
   const navigate = useNavigate();
   const [poem, setPoem] = useState<ExtendedPoem | null>(null);
@@ -33,7 +31,6 @@ export const ViewPoem = () => {
   const [selectedStanzaId, setSelectedStanzaId] = useState<string | null>(null);
   const [selectedStanzaText, setSelectedStanzaText] = useState('');
   const [stanzasWithComments, setStanzasWithComments] = useState<Record<string, boolean>>({});
-  const [isCheckingComments, setIsCheckingComments] = useState(false);
   
   // Share modal state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -41,8 +38,7 @@ export const ViewPoem = () => {
   // Function to check for comments in stanzas
   const checkStanzaComments = useCallback(async (stanzas: any[]) => {
     if (!stanzas || stanzas.length === 0) return;
-    
-    setIsCheckingComments(true);
+
     const commentsCheck: Record<string, boolean> = {};
     
     try {
@@ -72,8 +68,6 @@ export const ViewPoem = () => {
       setStanzasWithComments(commentsCheck);
     } catch (error) {
       console.error('Error checking stanza comments:', error);
-    } finally {
-      setIsCheckingComments(false);
     }
   }, []);
 

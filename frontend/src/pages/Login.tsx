@@ -16,7 +16,6 @@ export const Login = () => {
 
 	return (
 		<div className="w-full h-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8 items-start px-4 py-12">
-			{/* Login Form */}
 			<div className="w-full max-w-md mx-auto h-full flex items-center">
 				<div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden w-full">
 					<div className="px-8 pt-8 pb-6">

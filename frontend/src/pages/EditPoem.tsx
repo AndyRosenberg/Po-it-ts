@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useEditPoem } from '../hooks/useEditPoem';
-import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { 
@@ -121,7 +120,6 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
 
 export const EditPoem = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
   const navigate = useNavigate();
   const { 
     stanzas, 

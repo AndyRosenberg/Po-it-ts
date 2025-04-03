@@ -1,7 +1,6 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useAuthContext } from "../hooks/useAuthContext";
 import { useMyPoems, Poem } from "../hooks/usePoems";
 import { useDeletePoem } from "../hooks/useDeletePoem";
 import { UserAvatar } from "../components/UserAvatar";
@@ -9,7 +8,6 @@ import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
 
 export const Home = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
