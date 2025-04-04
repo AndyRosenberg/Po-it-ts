@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 type BackButtonProps = {
   className?: string;
@@ -6,7 +6,6 @@ type BackButtonProps = {
 
 export const BackButton = ({ className = "" }: BackButtonProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleGoBack = () => {
     // Check if history exists and is not an edit page

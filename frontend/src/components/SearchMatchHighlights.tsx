@@ -53,7 +53,7 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
         )}
         
         {/* Show stanza matches */}
-        {searchMatches.matchingStanzas.map((stanza, index) => (
+        {searchMatches.matchingStanzas.map((stanza) => (
           <div key={stanza.id} className="line-clamp-2">
             <span className="text-cyan-400 font-medium">Stanza {stanza.position + 1}:</span>{' '}
             <span className="whitespace-pre-wrap">{formatSnippet(stanza.snippet, stanza.matchIndex)}</span>

@@ -12,7 +12,7 @@ type UpdateUserData = {
 export const useUpdateUser = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const { authUser, setAuthUser } = useAuthContext();
+  const { setAuthUser } = useAuthContext();
   const queryClient = useQueryClient();
 
   const { mutate: updateUser, isPending: isLoading } = useMutation({

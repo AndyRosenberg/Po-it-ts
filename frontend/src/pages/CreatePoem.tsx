@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
-import { Link } from 'react-router-dom';
 import { useCreatePoem } from '../hooks/useCreatePoem';
-import { useAuthContext } from '../hooks/useAuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { 
@@ -15,7 +13,6 @@ import {
   DragEndEvent
 } from '@dnd-kit/core';
 import { 
-  arrayMove, 
   SortableContext, 
   sortableKeyboardCoordinates,
   useSortable,
@@ -149,7 +146,6 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
 
 export const CreatePoem = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
   const { 
     stanzas, 
     isLoading, 

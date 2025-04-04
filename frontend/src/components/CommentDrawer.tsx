@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useComments, Comment } from '../hooks/useComments';
 import { useAuthContext } from '../hooks/useAuthContext';
-import { UserAvatar } from './UserAvatar';
 import { getUserInitials } from '../utils/user-utils';
 
 interface CommentDrawerProps {

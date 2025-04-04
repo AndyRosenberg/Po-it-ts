@@ -11,14 +11,6 @@ interface Stanza {
   updatedAt?: string;
 }
 
-interface Poem {
-  id: string;
-  title: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export const useCreatePoem = () => {
   const [stanzas, setStanzas] = useState<Stanza[]>([]);
   const [poemId, setPoemId] = useState<string | null>(null);

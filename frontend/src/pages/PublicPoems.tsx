@@ -2,13 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { usePublicPoems, Poem } from "../hooks/usePoems";
-import { useAuthContext } from "../hooks/useAuthContext";
 import { UserAvatar } from "../components/UserAvatar";
 import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
 
 export const PublicPoems = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
@@ -31,14 +29,13 @@ export const PublicPoems = () => {
     hasNextPage,
     isFetchingNextPage,
     pagesCount,
-    refetch
   } = usePublicPoems(12, debouncedSearchQuery); // Fetch 12 items per page with search query
   
   // Set up infinite scrolling
   const observerTarget = useRef(null);
 
   const handleObserver = useCallback(
-    (entries) => {
+    (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
         fetchNextPage();
@@ -122,7 +119,7 @@ export const PublicPoems = () => {
         {/* Error display */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
-            {error}
+            {`${error}`}
           </div>
         )}
         
