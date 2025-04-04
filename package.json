@@ -4,6 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch backend/src --exec tsx backend/src/index.ts",
+    "build": "npx tsc -p backend",
+    "start": "node backend/dist/src/index.js",
     "repl": "tsx --tsconfig tsconfig.json"
   },
   "type": "module",
