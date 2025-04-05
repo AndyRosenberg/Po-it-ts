@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
@@ -13,6 +13,8 @@ const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'poems' | 'followers' | 'following'>('poems');
+
+  useEffect(() => setActiveTab('poems'), [userId]);
   
   // Custom hooks for data fetching
   const { data: user, isLoading: userLoading } = useUserProfile(userId);
