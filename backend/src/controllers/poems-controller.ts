@@ -2,6 +2,56 @@ import { Request, Response } from "express";
 import prisma from "../db/prisma.js";
 import { Prisma } from "@prisma/client";
 
+// Get poems by a specific user
+export const getUserPoems = async (request: Request, response: Response) => {
+  try {
+    const { userId } = request.params;
+    
+    // Verify user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+    
+    // Get user's poems
+    const poems = await prisma.poem.findMany({
+      where: { userId },
+      include: {
+        stanzas: {
+          orderBy: {
+            position: Prisma.SortOrder.asc
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePic: true,
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: Prisma.SortOrder.desc
+      }
+    });
+    
+    // Add flag to indicate if current user is the owner
+    const isCurrentUserOwner = !!request.user && request.user.id === userId;
+    const poemsWithOwnership = poems.map(poem => ({
+      ...poem,
+      isOwner: isCurrentUserOwner
+    }));
+    
+    response.status(200).json(poemsWithOwnership);
+  } catch (error: any) {
+    console.error("Error in getUserPoems: ", error.message);
+    response.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const deletePoem = async (request: Request, response: Response) => {
   try {
     const { poemId } = request.params;

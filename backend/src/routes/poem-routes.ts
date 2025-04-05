@@ -11,7 +11,8 @@ import {
   getMyPoems, 
   updatePoemTitle,
   updateStanza,
-  reorderStanzas
+  reorderStanzas,
+  getUserPoems
 } from '../controllers/poems-controller.js';
 
 const router = express.Router();
@@ -23,6 +24,7 @@ router.get("/my-poems/:poemId", protectRoute, getMyPoemById);
 // Poem routes - public (all poems)
 router.get("/poems", protectRoute, getAllPoems);
 router.get("/poems/:poemId", protectRoute, getPoemById);
+router.get("/poems/user/:userId", protectRoute, getUserPoems);
 
 // Poem creation and modification
 router.post("/poems", protectRoute, createPoem);

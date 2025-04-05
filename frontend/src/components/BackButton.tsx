@@ -8,17 +8,9 @@ export const BackButton = ({ className = "" }: BackButtonProps) => {
   const navigate = useNavigate();
 
   const handleGoBack = () => {
-    // Check if history exists and is not an edit page
     if (window.history.state && window.history.state.idx > 0) {
-      const prevPath = window.history.state.usr?.pathname || "";
-      // If previous page was an edit page, go home
-      if (prevPath.includes("/edit") || prevPath.includes("/create")) {
-        navigate("/");
-      } else {
-        navigate(-1); // Normal back behavior
-      }
+      navigate(-1);
     } else {
-      // If no history or at the start of history, go home
       navigate("/");
     }
   };

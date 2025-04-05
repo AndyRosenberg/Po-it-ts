@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useDeletePoem } from '../hooks/useDeletePoem';
 import { Poem } from '../hooks/usePoems';
@@ -194,9 +194,12 @@ export const ViewPoem = () => {
                   {formattedDate}
                 </div>
                 {poem.user && (
-                  <div className="text-sm text-cyan-400">
+                  <Link 
+                    to={`/profile/${poem.user.id}`}
+                    className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
                     by {poem.user.username}
-                  </div>
+                  </Link>
                 )}
               </div>
               

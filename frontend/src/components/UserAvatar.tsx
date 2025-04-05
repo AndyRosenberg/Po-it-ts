@@ -59,6 +59,13 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
             <p className="text-xs leading-tight text-slate-400 truncate">{user?.email}</p>
           </div>
           <Link 
+            to={`/profile/${user?.id}`} 
+            className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
+            onClick={() => setIsOpen(false)}
+          >
+            My Profile
+          </Link>
+          <Link 
             to="/settings" 
             className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
             onClick={() => setIsOpen(false)}

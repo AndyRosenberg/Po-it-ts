@@ -29,6 +29,10 @@ model User {
 
   poems Poem[]
   comments Comment[]
+  
+  // Self-relation for follows
+  following User[] @relation("UserFollows")
+  followers User[] @relation("UserFollows")
 }
 
 model Poem {

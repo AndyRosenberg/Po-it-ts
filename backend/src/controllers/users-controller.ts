@@ -3,6 +3,39 @@ import prisma from '../db/prisma.js';
 import bcryptjs from "bcryptjs";
 import { isValidEmail } from '../utils/validation.js';
 
+export const getUserById = async (request: Request, response: Response) => {
+  try {
+    const { userId } = request.params;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        profilePic: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            poems: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    response.status(200).json(user);
+  } catch (error: any) {
+    response.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const updateUser = async (request: Request, response: Response) => {
   try {
     const { username, email, password, currentPassword } = request.body;

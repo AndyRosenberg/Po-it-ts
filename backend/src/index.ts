@@ -4,6 +4,7 @@ import authRoutes from './routes/auth-routes.js';
 import poemRoutes from './routes/poem-routes.js';
 import userRoutes from './routes/user-routes.js';
 import commentRoutes from './routes/comment-routes.js';
+import followsRoutes from './routes/follows-routes.js';
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -22,6 +23,7 @@ app.use(cors(corsOptions));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/follows", followsRoutes);
 app.use("/api", poemRoutes);
 
 const PORT = process.env.PORT || 5000;

@@ -9,6 +9,7 @@ import { PublicPoems } from "./pages/PublicPoems";
 import { Settings } from "./pages/Settings";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
+import UserProfile from "./pages/UserProfile";
 
 export const AppRoutes = () => (
   <Routes>
@@ -22,5 +23,6 @@ export const AppRoutes = () => (
     <Route path="/poems/:poemId/edit" element={<EditPoem />} />
     <Route path="/explore" element={<PublicPoems />} />
     <Route path="/settings" element={<Settings />} />
+    <Route path="/profile/:userId" element={<UserProfile />} />
   </Routes>
 )
