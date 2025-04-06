@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useUpdateUser } from "../hooks/useUpdateUser";
 import { Link } from "react-router-dom";
-import { UserAvatar } from "../components/UserAvatar";
+import { Header } from "../components/Header";
 
 export const Settings = () => {
   useAuthRedirect();
@@ -59,23 +59,7 @@ export const Settings = () => {
     <div className="w-full max-w-5xl mx-auto px-4">
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
-        <header className="py-6 mb-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <Link to="/" className="text-3xl font-bold">
-                <span className="bg-gradient-to-r from-cyan-400 to-orange-500 bg-clip-text text-transparent">Po-it</span>
-              </Link>
-              <span className="bg-cyan-500/20 text-cyan-200 text-xs px-2 py-1 rounded-full">Settings</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link to="/explore" className="text-slate-300 hover:text-white transition-colors">
-                Explore
-              </Link>
-              <UserAvatar />
-            </div>
-          </div>
-        </header>
+        <Header label="Settings" />
         
         {/* Content */}
         <div className="max-w-2xl mx-auto w-full">

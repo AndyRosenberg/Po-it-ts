@@ -1,10 +1,10 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useMyPoems, Poem } from "../hooks/usePoems";
+import { useFeedPoems, Poem } from "../hooks/usePoems";
 import { useDeletePoem } from "../hooks/useDeletePoem";
-import { UserAvatar } from "../components/UserAvatar";
 import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
+import { Header } from "../components/Header";
 
 export const Home = () => {
   useAuthRedirect();
@@ -22,6 +22,7 @@ export const Home = () => {
     };
   }, [searchQuery]);
   
+  // Fetch feed poems
   const { 
     poems, 
     isLoading, 
@@ -31,7 +32,8 @@ export const Home = () => {
     hasNextPage,
     isFetchingNextPage,
     pagesCount
-  } = useMyPoems(12, debouncedSearchQuery); // Fetch 12 items per page with search
+  } = useFeedPoems(12, debouncedSearchQuery);
+  
   const { deletePoem, isLoading: isDeleting } = useDeletePoem();
   
   // Set up infinite scrolling
@@ -87,23 +89,7 @@ export const Home = () => {
     <div className="w-full max-w-5xl mx-auto px-4">
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
-        <header className="py-6 mb-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-3xl font-bold">
-                <span className="bg-gradient-to-r from-cyan-400 to-orange-500 bg-clip-text text-transparent">Po-it</span>
-              </h1>
-              <span className="bg-cyan-500/20 text-cyan-200 text-xs px-2 py-1 rounded-full">My Poems</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link to="/explore" className="text-slate-300 hover:text-white transition-colors">
-                Explore
-              </Link>
-              <UserAvatar />
-            </div>
-          </div>
-        </header>
+        <Header label="Feed" />
         
         {/* Search */}
         <div className="relative mb-8">
@@ -141,19 +127,19 @@ export const Home = () => {
               <div className="md:col-span-2 flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div className="bg-cyan-500/10 w-16 h-16 mb-6 rounded-full flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-cyan-400">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No poems yet</h3>
-                <p className="text-slate-400 mb-6 max-w-md">Create your first poem to get started. Express yourself through words and share your creativity.</p>
+                <h3 className="text-xl font-semibold mb-2">Your feed is empty</h3>
+                <p className="text-slate-400 mb-6 max-w-md">Follow poets to see their work in your feed. Discover new voices and find inspiration.</p>
                 <Link 
-                  to="/poems/create"
+                  to="/explore"
                   className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
-                  Create new poem
+                  Explore poets
                 </Link>
               </div>
             </div>

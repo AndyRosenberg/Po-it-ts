@@ -713,3 +713,196 @@ export const reorderStanzas = async (request: Request, response: Response) => {
     response.status(500).json({ error: "Internal server error" });
   }
 }
+
+// Get poems for user's feed (poems from followed users)
+export const getFeedPoems = async (request: Request, response: Response) => {
+  try {
+    const { cursor, limit = '10', search } = request.query;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
+
+    // Get users that the current user follows
+    const currentUser = await prisma.user.findUnique({
+      where: { id: request.user.id },
+      include: {
+        following: {
+          select: { id: true }
+        }
+      }
+    });
+
+    if (!currentUser) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    // Get IDs of users that the current user follows
+    const followingUserIds = currentUser.following.map(user => user.id);
+    
+    // If not following anyone, return empty results
+    if (followingUserIds.length === 0) {
+      return response.status(200).json({
+        poems: [],
+        nextCursor: null,
+        totalCount: 0
+      });
+    }
+    
+    // Base where clause to get poems from followed users
+    let whereClause: any = {
+      userId: {
+        in: followingUserIds
+      }
+    };
+    
+    let isSearchQuery = false;
+
+    // Add search criteria if provided
+    if (search && typeof search === 'string' && search.trim()) {
+      isSearchQuery = true;
+      whereClause = {
+        AND: [
+          { userId: { in: followingUserIds } },
+          {
+            OR: [
+              {
+                title: {
+                  contains: search.trim(),
+                  mode: 'insensitive'
+                }
+              },
+              {
+                stanzas: {
+                  some: {
+                    body: {
+                      contains: search.trim(),
+                      mode: 'insensitive'
+                    }
+                  }
+                }
+              },
+              {
+                user: {
+                  username: {
+                    contains: search.trim(),
+                    mode: 'insensitive'
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    // Base query similar to getAllPoems
+    const baseQuery = {
+      where: whereClause,
+      include: {
+        stanzas: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePic: true,
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: Prisma.SortOrder.desc
+      }
+    };
+
+    // Add cursor if provided
+    const queryWithCursor = cursor
+      ? {
+          ...baseQuery,
+          cursor: {
+            id: cursor as string
+          },
+          skip: 1,
+        }
+      : baseQuery;
+
+    // Execute the query with pagination
+    const poems = await prisma.poem.findMany({
+      ...queryWithCursor,
+      take: finalLimit + 1,
+    });
+
+    // Determine if there are more results and the next cursor
+    const hasMore = poems.length > finalLimit;
+    const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
+    
+    // Set isOwner flag for each poem
+    const poemsWithOwnership = paginatedPoems.map(poem => ({
+      ...poem,
+      isOwner: poem.userId === request.user.id
+    }));
+    
+    const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
+
+    // Get total count for reference
+    const totalCount = await prisma.poem.count({
+      where: whereClause
+    });
+    
+    // Add search match information
+    let poemsWithSearchMatches = poemsWithOwnership;
+    
+    if (isSearchQuery && search) {
+      const searchTerm = search.toString().trim().toLowerCase();
+      
+      poemsWithSearchMatches = poemsWithOwnership.map(poem => {
+        // Find matches in title
+        const titleMatch = poem.title.toLowerCase().includes(searchTerm);
+        
+        // Find matches in username
+        const usernameMatch = poem.user && poem.user.username.toLowerCase().includes(searchTerm);
+        
+        // Find matches in stanzas
+        const matchingStanzas = poem.stanzas
+          .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
+          .map(stanza => {
+            // Get a snippet of text around the match
+            const stanzaText = stanza.body;
+            const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
+            
+            // Get context around the match (up to 50 chars before and after)
+            const startIndex = Math.max(0, matchIndex - 50);
+            const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
+            let snippet = stanzaText.substring(startIndex, endIndex);
+            
+            // Add ellipsis if we trimmed the text
+            if (startIndex > 0) snippet = '...' + snippet;
+            if (endIndex < stanzaText.length) snippet = snippet + '...';
+            
+            return {
+              id: stanza.id,
+              position: stanza.position,
+              snippet,
+              matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
+            };
+          });
+        
+        return {
+          ...poem,
+          searchMatches: {
+            titleMatch,
+            usernameMatch,
+            matchingStanzas
+          }
+        };
+      });
+    }
+
+    // Return the paginated response
+    response.status(200).json({
+      poems: poemsWithSearchMatches,
+      nextCursor,
+      totalCount
+    });
+  } catch (error: any) {
+    console.error("Error in getFeedPoems: ", error.message);
+    response.status(500).json({ error: "Internal server error" });
+  }
+}

@@ -8,7 +8,8 @@ import {
   getAllPoems,
   getPoemById, 
   getMyPoemById,
-  getMyPoems, 
+  getMyPoems,
+  getFeedPoems,
   updatePoemTitle,
   updateStanza,
   reorderStanzas,
@@ -20,6 +21,7 @@ const router = express.Router();
 // Poem routes - private (user's own poems)
 router.get("/my-poems", protectRoute, getMyPoems);
 router.get("/my-poems/:poemId", protectRoute, getMyPoemById);
+router.get("/feed", protectRoute, getFeedPoems);
 
 // Poem routes - public (all poems)
 router.get("/poems", protectRoute, getAllPoems);

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { usePublicPoems, Poem } from "../hooks/usePoems";
-import { UserAvatar } from "../components/UserAvatar";
 import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
+import { Header } from "../components/Header";
 
 export const PublicPoems = () => {
   useAuthRedirect();
@@ -82,23 +82,7 @@ export const PublicPoems = () => {
     <div className="w-full max-w-5xl mx-auto px-4">
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
-        <header className="py-6 mb-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-3xl font-bold">
-                <span className="bg-gradient-to-r from-cyan-400 to-orange-500 bg-clip-text text-transparent">Po-it</span>
-              </h1>
-              <span className="bg-cyan-500/20 text-cyan-200 text-xs px-2 py-1 rounded-full">Explore</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-slate-300 hover:text-white transition-colors">
-                My Poems
-              </Link>
-              <UserAvatar />
-            </div>
-          </div>
-        </header>
+        <Header label="Explore" navLinkLabel="Feed" navLinkPath="/" />
         
         {/* Search */}
         <div className="relative mb-8">
