@@ -81,3 +81,10 @@ model Comment {
   
   @@index([commentableType, commentableId])
 }
+
+model Follow {
+  @@map("_UserFollows")
+  A String
+  B String
+  @@id([A, B])
+}

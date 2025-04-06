@@ -101,3 +101,70 @@ export const updateUser = async (request: Request, response: Response) => {
     response.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const deleteUser = async (request: Request, response: Response) => {
+  try {
+    const userId = request.user.id;
+    const { password } = request.body;
+
+    // Get current user
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    // Verify password before deletion
+    if (!password) {
+      return response.status(400).json({ error: "Password is required to delete account" });
+    }
+
+    const isPasswordCorrect = await bcryptjs.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return response.status(400).json({ error: "Password is incorrect" });
+    }
+
+    // Delete user and all related data using transactions
+    await prisma.$transaction(async (prismaClient) => {
+      // Delete user's poems and related comments
+      const poems = await prismaClient.poem.findMany({
+        where: { userId },
+        select: { id: true }
+      });
+      
+      const poemIds = poems.map(poem => poem.id);
+
+      // Delete user's comments on other poems
+      await prismaClient.comment.deleteMany({
+        where: { userId }
+      });
+
+      await prismaClient.stanza.deleteMany({
+        where: {
+          poemId: { in: poemIds }
+        }
+      });
+
+      await prismaClient.poem.deleteMany({
+        where: { userId }
+      });
+
+      await prismaClient.follow.deleteMany({
+        where: {
+          OR: [
+            { A: userId },
+            { B: userId }
+          ]
+        }
+      });
+
+      await prismaClient.user.delete({
+        where: { id: userId }
+      });
+    });
+
+    response.status(200).json({ message: "Account successfully deleted" });
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    response.status(500).json({ error: "Internal Server Error" });
+  }
+};
