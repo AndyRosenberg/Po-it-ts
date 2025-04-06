@@ -2,7 +2,6 @@ import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useUpdateUser } from "../hooks/useUpdateUser";
-import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
 
 export const Settings = () => {
