@@ -18,6 +18,16 @@ export const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Reset modal state when component unmounts
+  useEffect(() => {
+    return () => {
+      setShowDeleteModal(false);
+      setShowConfirmation(false);
+      setDeletePassword("");
+    };
+  }, []);
 
   // Initialize form with current user data
   useEffect(() => {
@@ -56,14 +66,12 @@ export const Settings = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!deletePassword) {
       return;
     }
     
-    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
-      await deleteAccount(deletePassword);
-    }
+    deleteAccount(deletePassword);
   };
 
   return (
@@ -164,7 +172,7 @@ export const Settings = () => {
               </div>
             </div>
             
-            <div className="pt-4 flex justify-between items-center">
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -172,13 +180,15 @@ export const Settings = () => {
               >
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
-              
+            </div>
+            
+            <div className="mt-12 pt-4 border-t border-slate-700/50">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="px-6 h-12 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-200 font-medium rounded-lg transition-all"
+                className="text-sm text-red-400/70 hover:text-red-400 transition-colors"
               >
-                Delete Account
+                Delete my account
               </button>
             </div>
           </form>
@@ -190,17 +200,28 @@ export const Settings = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/70" 
-            onClick={() => setShowDeleteModal(false)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            onClick={() => {
+              if (!isDeleting) {
+                setShowDeleteModal(false);
+                setShowConfirmation(false);
+              }
+            }}
           ></div>
           
           {/* Modal content */}
-          <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 w-full max-w-md z-10">
+          <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 w-full max-w-md z-10 transform transition-all">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-white">Delete Account</h3>
               <button 
-                onClick={() => setShowDeleteModal(false)}
-                className="text-slate-400 hover:text-white"
+                onClick={() => {
+                  if (!isDeleting) {
+                    setShowDeleteModal(false);
+                    setShowConfirmation(false);
+                  }
+                }}
+                disabled={isDeleting}
+                className="text-slate-400 hover:text-white disabled:opacity-50"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -209,40 +230,74 @@ export const Settings = () => {
             </div>
             
             <div className="mt-4">
-              <p className="text-slate-300 mb-4">
-                This action cannot be undone. All your data will be permanently deleted.
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="deletePassword" className="block text-sm font-medium text-slate-300 mb-1">
-                    Enter your password to confirm
-                  </label>
-                  <input
-                    type="password"
-                    id="deletePassword"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    className="w-full h-12 px-4 rounded-lg bg-slate-700 border border-slate-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-white"
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={isDeleting || !deletePassword}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Account'}
-                </button>
-              </div>
+              {!showConfirmation ? (
+                <>
+                  <p className="text-slate-300 mb-4">
+                    This action cannot be undone. All your data will be permanently deleted.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="deletePassword" className="block text-sm font-medium text-slate-300 mb-1">
+                        Enter your password to confirm
+                      </label>
+                      <input
+                        type="password"
+                        id="deletePassword"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="w-full h-12 px-4 rounded-lg bg-slate-700 border border-slate-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-white"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setShowConfirmation(true)}
+                      disabled={!deletePassword}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <div className="mb-4 text-red-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">Are you absolutely sure?</h3>
+                    <p className="text-slate-300 mb-6">
+                      This action <span className="font-bold text-red-400">cannot</span> be undone.
+                    </p>
+                    
+                    <div className="flex justify-center space-x-4">
+                      <button
+                        onClick={() => setShowConfirmation(false)}
+                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+                      >
+                        Go Back
+                      </button>
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

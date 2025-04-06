@@ -32,10 +32,18 @@ export const useDeleteAccount = () => {
       return data;
     },
     onSuccess: () => {
+      // Pre-navigate cleanup
+      localStorage.removeItem('lastLoginTime');
+      
+      // Clear auth state and cache
       setAuthUser(null);
-      queryClient.clear(); // Clear all query cache
+      queryClient.removeQueries(); // More performant than clear()
+      
+      // UI feedback and navigation
       toast.success('Your account has been successfully deleted');
-      navigate('/login');
+      
+      // Use timeout to allow React to process state changes before navigation
+      setTimeout(() => navigate('/login'), 10);
     },
     onError: (error: Error) => {
       setError(error.message);
