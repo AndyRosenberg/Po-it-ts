@@ -134,7 +134,6 @@ export const PublicPoems = () => {
                     key={poem.id}
                     poem={poem}
                     searchQuery={debouncedSearchQuery}
-                    showAuthor={true}
                   />
                 ))
               )}
