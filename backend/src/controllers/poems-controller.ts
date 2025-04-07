@@ -738,19 +738,13 @@ export const getFeedPoems = async (request: Request, response: Response) => {
     // Get IDs of users that the current user follows
     const followingUserIds = currentUser.following.map(user => user.id);
     
-    // If not following anyone, return empty results
-    if (followingUserIds.length === 0) {
-      return response.status(200).json({
-        poems: [],
-        nextCursor: null,
-        totalCount: 0
-      });
-    }
+    // Include the current user's ID to show their own poems too
+    const userIdsForFeed = [...followingUserIds, currentUser.id];
     
-    // Base where clause to get poems from followed users
+    // Base where clause to get poems from followed users and the user's own poems
     let whereClause: any = {
       userId: {
-        in: followingUserIds
+        in: userIdsForFeed
       }
     };
     

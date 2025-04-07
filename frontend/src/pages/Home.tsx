@@ -1,10 +1,9 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useFeedPoems, Poem } from "../hooks/usePoems";
-import { useDeletePoem } from "../hooks/useDeletePoem";
-import { SearchMatchHighlights } from "../components/SearchMatchHighlights";
+import { useFeedPoems } from "../hooks/usePoems";
 import { Header } from "../components/Header";
+import { PoemCard } from "../components/PoemCard";
 
 export const Home = () => {
   useAuthRedirect();
@@ -27,14 +26,11 @@ export const Home = () => {
     poems, 
     isLoading, 
     error, 
-    refetch, 
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     pagesCount
   } = useFeedPoems(12, debouncedSearchQuery);
-  
-  const { deletePoem, isLoading: isDeleting } = useDeletePoem();
   
   // Set up infinite scrolling
   const observerTarget = useRef(null);
@@ -69,21 +65,6 @@ export const Home = () => {
 
   // We no longer need client-side filtering as it's done server-side
   const filteredPoems = poems;
-
-  // Format preview text
-  const formatPreview = (poem: Poem) => {
-    if (poem.stanzas.length === 0) return "Empty poem";
-    
-    // Get the first stanza
-    const firstStanza = poem.stanzas[0].body;
-    
-    // Truncate if needed
-    if (firstStanza.length > 120) {
-      return firstStanza.substring(0, 120) + '...';
-    }
-    
-    return firstStanza;
-  };
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4">
@@ -131,16 +112,27 @@ export const Home = () => {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Your feed is empty</h3>
-                <p className="text-slate-400 mb-6 max-w-md">Follow poets to see their work in your feed. Discover new voices and find inspiration.</p>
-                <Link 
-                  to="/explore"
-                  className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                  Explore poets
-                </Link>
+                <p className="text-slate-400 mb-6 max-w-md">Your feed shows your poems and poems from poets you follow. Start by creating your own poem or discover new voices.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link 
+                    to="/poems/create"
+                    className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Create a poem
+                  </Link>
+                  <Link 
+                    to="/explore"
+                    className="inline-flex items-center px-4 h-10 border border-cyan-500/50 bg-transparent hover:bg-cyan-500/10 text-cyan-400 font-medium rounded-lg transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    Explore poets
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (
@@ -152,61 +144,11 @@ export const Home = () => {
                 </div>
               ) : (
                 filteredPoems.map(poem => (
-                  <div
+                  <PoemCard
                     key={poem.id}
-                    className="block bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-cyan-600/30 hover:bg-slate-800/80 transition-colors shadow-md hover:shadow-cyan-500/10"
-                  >
-                    <Link to={`/poems/${poem.id}`} className="block">
-                      <div className="mb-2 font-medium text-white text-lg">
-                        {poem.title}
-                      </div>
-                      <div className="mb-3 text-xs text-slate-500">
-                        {new Date(poem.updatedAt).toLocaleDateString()}
-                      </div>
-                      <div className="prose prose-slate prose-invert max-w-none mb-2 text-slate-300 line-clamp-4 whitespace-pre-wrap">
-                        {formatPreview(poem)}
-                      </div>
-                      
-                      {/* Show search match highlights */}
-                      {debouncedSearchQuery && poem.searchMatches && (
-                        <SearchMatchHighlights 
-                          searchMatches={poem.searchMatches} 
-                          searchQuery={debouncedSearchQuery}
-                        />
-                      )}
-                    </Link>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
-                      <div className="flex space-x-2">
-                        <Link 
-                          to={`/poems/${poem.id}/edit`}
-                          className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
-                          aria-label="Edit poem"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 0 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                          </svg>
-                        </Link>
-                        <button 
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (window.confirm('Are you sure you want to delete this poem? This action cannot be undone.')) {
-                              await deletePoem(poem.id);
-                              refetch();
-                            }
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-700"
-                          aria-label="Delete poem"
-                          disabled={isDeleting}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    poem={poem}
+                    searchQuery={debouncedSearchQuery}
+                  />
                 ))
               )}
               
