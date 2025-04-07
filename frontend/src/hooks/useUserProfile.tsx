@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 
 interface User {
   id: string;
@@ -36,14 +36,31 @@ export const useUserProfile = (userId: string | undefined) => {
   });
 };
 
-// Hook to fetch user's poems
-export const useUserPoems = (userId: string | undefined) => {
-  return useQuery({
-    queryKey: ['userPoems', userId],
-    queryFn: async () => {
-      if (!userId) return [];
+// Hook to fetch user's poems with pagination, infinite scroll, and search
+export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQuery?: string) => {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ['userPoems', userId, pageSize, searchQuery],
+    queryFn: async ({ pageParam = '' }) => {
+      if (!userId) return { poems: [], nextCursor: null, totalCount: 0 };
       
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/user/${userId}`, {
+      const url = new URL(`${process.env.HOST_DOMAIN}/api/poems/user/${userId}`);
+      url.searchParams.append('limit', pageSize.toString());
+      if (pageParam) {
+        url.searchParams.append('cursor', pageParam);
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+
+      const response = await fetch(url, {
         credentials: 'include',
       });
       
@@ -54,6 +71,27 @@ export const useUserPoems = (userId: string | undefined) => {
       
       return await response.json();
     },
+    getNextPageParam: (lastPage) => {
+      return lastPage.nextCursor || undefined;
+    },
+    initialPageParam: '',
     enabled: !!userId
   });
+
+  // Flatten the pages into a single list of poems
+  const poems = data?.pages.flatMap(page => page.poems) || [];
+  
+  // Count the number of pages that have been loaded
+  const pagesCount = data?.pages.length || 0;
+  
+  return { 
+    poems, 
+    isLoading, 
+    error, 
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesCount
+  };
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
@@ -13,14 +13,63 @@ const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'poems' | 'followers' | 'following'>('poems');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   useEffect(() => setActiveTab('poems'), [userId]);
   
+  // Set up search debounce
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchQuery]);
+  
   // Custom hooks for data fetching
   const { data: user, isLoading: userLoading } = useUserProfile(userId);
-  const { data: poems, isLoading: poemsLoading } = useUserPoems(userId);
+  const { 
+    poems, 
+    isLoading: poemsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesCount
+  } = useUserPoems(userId, 12, debouncedSearchQuery);
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
+  
+  // Set up infinite scrolling
+  const observerTarget = useRef(null);
+
+  const handleObserver = useCallback(
+    (entries: any) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !poemsLoading) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, poemsLoading]
+  );
+
+  // Set up the observer effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+    });
+    
+    const currentTarget = observerTarget.current;
+    if (currentTarget) observer.observe(currentTarget);
+    
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [handleObserver]);
 
   if (userLoading) {
     return (
@@ -149,7 +198,23 @@ const UserProfile = () => {
             {/* Poems tab */}
             {activeTab === 'poems' && (
               <div>
-                {poemsLoading ? (
+                {/* Search bar for poems tab */}
+                <div className="relative mb-6">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search poems..."
+                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                {poemsLoading && !isFetchingNextPage ? (
                   <div className="flex justify-center my-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
                   </div>
@@ -158,20 +223,32 @@ const UserProfile = () => {
                     <p className="text-slate-400">No poems yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {poems?.map((poem: Poem) => (
-                      <div 
-                        key={poem.id} 
-                        onClick={() => navigate(`/poems/${poem.id}`)}
-                        className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
-                      >
-                        <h3 className="text-lg font-medium text-white mb-2">{poem.title}</h3>
-                        <p className="text-sm text-slate-400">
-                          {new Date(poem.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div className="space-y-4">
+                      {poems?.map((poem: Poem) => (
+                        <div 
+                          key={poem.id} 
+                          onClick={() => navigate(`/poems/${poem.id}`)}
+                          className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                        >
+                          <h3 className="text-lg font-medium text-white mb-2">{poem.title}</h3>
+                          <p className="text-sm text-slate-400">
+                            {new Date(poem.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Loading indicator at the bottom for infinite scroll */}
+                    <div 
+                      ref={observerTarget} 
+                      className="py-8 flex justify-center"
+                    >
+                      {isFetchingNextPage && (
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}
