@@ -37,7 +37,6 @@ const UserProfile = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    pagesCount
   } = useUserPoems(userId, 12, debouncedSearchQuery);
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
