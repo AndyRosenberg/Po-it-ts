@@ -211,7 +211,9 @@ export const useCreatePoem = () => {
 
     // Submit any unsaved stanza
     if (unsavedStanza && unsavedStanza.trim()) {
-      await addStanza(unsavedStanza);
+      await addStanza({
+        body: unsavedStanza.trim()
+      });
     }
 
     if (poemId) {

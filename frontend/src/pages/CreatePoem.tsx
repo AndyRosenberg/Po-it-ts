@@ -222,7 +222,7 @@ export const CreatePoem = () => {
     // First check if any stanzas are being edited
     const stanzaElements = document.querySelectorAll('textarea');
     let activeStanzaId = null;
-    let activeStanzaText = null;
+    let activeStanzaText = '';
     
     // Look for textareas that are visible and being edited (within stanza cards)
     stanzaElements.forEach(element => {
