@@ -3,7 +3,7 @@ import { AppRoutes } from "./AppRoutes";
 
 function App() {
   return (
-    <div className="h-full w-full bg-gradient-to-br from-gray-900 via-cyan-950 to-gray-900 overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen min-h-screen bg-gradient-to-br from-gray-900 via-cyan-950 to-gray-900 overflow-hidden">
       {/* Background patterns */}
       <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
       <div className="absolute inset-0 backdrop-blur-[118px] opacity-30">
@@ -24,8 +24,8 @@ function App() {
       </div>
       
       {/* Main content */}
-      <div className="relative flex items-center justify-center h-full w-full" style={{minWidth: "100vw", minHeight: "100vh"}}>
-        <div className="w-full h-full flex items-center justify-center px-4 py-8 overflow-y-auto">
+      <div className="relative w-full h-full overflow-auto">
+        <div className="w-full h-full flex justify-center">
           <AppRoutes />
         </div>
         

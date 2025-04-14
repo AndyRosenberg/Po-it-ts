@@ -243,8 +243,8 @@ export const EditPoem = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto h-full pb-24">
-      <div className="flex flex-col min-h-[90vh]">
+    <div className="w-full max-w-5xl mx-auto pb-24">
+      <div className="flex flex-col">
 
         {/* Header */}
         <header className="py-6 mb-8">
@@ -276,7 +276,7 @@ export const EditPoem = () => {
         )}
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto relative">
+        <div className="flex-1 overflow-y-auto relative min-h-[50vh]">
           {/* Loading overlay for when we're updating but already have stanzas loaded */}
           {isLoading && stanzas.length > 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-30 z-10 flex justify-center items-center">

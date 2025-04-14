@@ -1,11 +1,9 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useResetPassword } from "../hooks/useResetPassword";
 import { BackButton } from "../components/BackButton";
 
 export const ResetPassword = () => {
-  useAuthRedirect("/");
   const navigate = useNavigate();
   const location = useLocation();
   const token = new URLSearchParams(location.search).get("token");
@@ -46,7 +44,7 @@ export const ResetPassword = () => {
   };
 
   return (
-    <div className="w-full h-full max-w-xl mx-auto px-4 py-12">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-12 flex flex-col items-center">
       <BackButton />
       <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden w-full mt-4">
         <div className="px-8 pt-8 pb-6">

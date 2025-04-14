@@ -236,8 +236,8 @@ export const CreatePoem = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 pb-24">
-      <div className="flex flex-col h-[90vh]">
+    <div className="w-full max-w-5xl mx-auto pb-24">
+      <div className="flex flex-col">
         {/* Header */}
         <header className="py-6 mb-4">
           <div className="flex justify-between items-center">
@@ -270,7 +270,7 @@ export const CreatePoem = () => {
         )}
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-[50vh]">
           {/* Poem title */}
           <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700 shadow-lg">
             <div className="flex justify-between items-center mb-2">
