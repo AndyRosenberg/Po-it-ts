@@ -184,7 +184,17 @@ export const useCreatePoem = () => {
   };
 
   // Complete and view the poem
-  const completePoem = () => {
+  const completePoem = async (unsavedTitle?: string, unsavedStanza?: string) => {
+    // Submit any unsaved title
+    if (unsavedTitle && unsavedTitle !== poemTitle) {
+      await updateTitle(unsavedTitle);
+    }
+
+    // Submit any unsaved stanza
+    if (unsavedStanza && unsavedStanza.trim()) {
+      await addStanza(unsavedStanza);
+    }
+
     if (poemId) {
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });

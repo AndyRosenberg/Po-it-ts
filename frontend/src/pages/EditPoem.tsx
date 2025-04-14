@@ -39,6 +39,15 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
   const charsRemaining = MAX_STANZA_CHARS - charCount;
   const isOverLimit = charCount > MAX_STANZA_CHARS;
   
+  // Submit unsaved changes when component unmounts or before navigation
+  useEffect(() => {
+    return () => {
+      if (isEditing && stanzaText !== body && !isOverLimit) {
+        onUpdate(id, stanzaText);
+      }
+    };
+  }, [id, body, stanzaText, isEditing, isOverLimit, onUpdate]);
+  
   const { 
     attributes, 
     listeners, 
@@ -70,6 +79,7 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
     <div 
       ref={setNodeRef} 
       style={style}
+      data-stanza-id={id}
       className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700 shadow-lg"
     >
       <div className="flex justify-between items-start mb-3">
@@ -214,6 +224,31 @@ export const EditPoem = () => {
     }
   };
 
+  // Handle completing the poem, submitting any unsaved edits
+  const handleCompletePoem = async () => {
+    // First check if any stanzas are being edited
+    const stanzaElements = document.querySelectorAll('textarea');
+    let activeStanzaId = null;
+    let activeStanzaText = null;
+    
+    // Look for textareas that are visible and being edited (within stanza cards)
+    stanzaElements.forEach(element => {
+      const stanzaCard = element.closest('[data-stanza-id]');
+      if (stanzaCard && element.style.display !== 'none') {
+        activeStanzaId = stanzaCard.getAttribute('data-stanza-id');
+        activeStanzaText = element.value;
+      }
+    });
+    
+    // If an active stanza edit is found, save it first
+    if (activeStanzaId && activeStanzaText && activeStanzaText.trim()) {
+      await updateStanza(activeStanzaId, activeStanzaText);
+    }
+    
+    // Now proceed with the normal completion, which will handle title and new stanza
+    await completePoem(editingTitle ? titleText : undefined, newStanzaText || undefined);
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto h-full pb-24">
       <div className="flex flex-col min-h-[90vh]">
@@ -230,7 +265,7 @@ export const EditPoem = () => {
               <UserAvatar />
               
               <button 
-                onClick={completePoem}
+                onClick={handleCompletePoem}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
                 disabled={isLoading}
               >
