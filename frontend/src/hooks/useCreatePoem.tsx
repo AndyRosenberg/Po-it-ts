@@ -81,6 +81,8 @@ export const useCreatePoem = () => {
       
       if (!poemId && newStanza.poemId) {
         setPoemId(newStanza.poemId);
+        // Invalidate relevant queries when a new poem is created
+        queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       }
       
       return newStanza;
@@ -111,6 +113,11 @@ export const useCreatePoem = () => {
         stanza.id === updatedStanza.id ? updatedStanza : stanza
       ));
       
+      // Invalidate the specific poem query if it exists
+      if (poemId) {
+        queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+      }
+      
       return updatedStanza;
     }
   });
@@ -132,6 +139,12 @@ export const useCreatePoem = () => {
     },
     onSuccess: (stanzaId) => {
       setStanzas(prev => prev.filter(stanza => stanza.id !== stanzaId));
+      
+      // Invalidate the specific poem query if it exists
+      if (poemId) {
+        queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+      }
+      
       return true;
     }
   });
@@ -174,6 +187,12 @@ export const useCreatePoem = () => {
     onSuccess: (updatedPoem) => {
       setPoemTitle(updatedPoem.title);
       setPoemId(updatedPoem.id);
+      
+      // Invalidate relevant queries when title is updated
+      if (updatedPoem.id) {
+        queryClient.invalidateQueries({ queryKey: ['poem', updatedPoem.id] });
+      }
+      
       return updatedPoem;
     }
   });
@@ -196,8 +215,11 @@ export const useCreatePoem = () => {
     }
 
     if (poemId) {
+      // Invalidate all poem-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['userPoems'] });
       navigate(`/poems/${poemId}`);
     }
   };
