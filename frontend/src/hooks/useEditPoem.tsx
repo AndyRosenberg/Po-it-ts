@@ -323,17 +323,7 @@ export const useEditPoem = () => {
     }
   };
 
-  // Keep stanzas and title in sync with poemData
-  useEffect(() => {
-    if (poemData) {
-      if (poemData.stanzas && poemData.stanzas.length > 0) {
-        setStanzas(poemData.stanzas);
-      }
-      if (poemData.title) {
-        setPoemTitle(poemData.title);
-      }
-    }
-  }, [poemData]);
+  // Remove duplicate effect - already handled in the earlier useEffect (lines 55-65)
 
   // Calculate overall loading state
   const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle;

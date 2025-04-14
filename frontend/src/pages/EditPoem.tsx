@@ -39,14 +39,7 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
   const charsRemaining = MAX_STANZA_CHARS - charCount;
   const isOverLimit = charCount > MAX_STANZA_CHARS;
   
-  // Submit unsaved changes when component unmounts or before navigation
-  useEffect(() => {
-    return () => {
-      if (isEditing && stanzaText !== body && !isOverLimit) {
-        onUpdate(id, stanzaText);
-      }
-    };
-  }, [id, body, stanzaText, isEditing, isOverLimit, onUpdate]);
+  // Removed auto-save on unmount - we only want to save when explicitly requested
   
   const { 
     attributes, 
@@ -224,7 +217,7 @@ export const EditPoem = () => {
     }
   };
 
-  // Handle completing the poem, submitting any unsaved edits
+  // Handle completing the poem, saving any unsaved edits only when explicitly requested
   const handleCompletePoem = async () => {
     // First check if any stanzas are being edited
     const stanzaElements = document.querySelectorAll('textarea');
@@ -240,7 +233,7 @@ export const EditPoem = () => {
       }
     });
     
-    // If an active stanza edit is found, save it first
+    // If an active stanza edit is found, save it first (only when "Done Editing" is clicked)
     if (activeStanzaId && activeStanzaText && activeStanzaText.trim()) {
       await updateStanza(activeStanzaId, activeStanzaText);
     }
