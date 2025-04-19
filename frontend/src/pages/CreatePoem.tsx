@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useCreatePoem } from '../hooks/useCreatePoem';
 import { UserAvatar } from '../components/UserAvatar';
