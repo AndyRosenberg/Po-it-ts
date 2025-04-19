@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { usePublicPoems } from "../hooks/usePoems";
@@ -31,8 +31,89 @@ export const PublicPoems = () => {
     pagesCount,
   } = usePublicPoems(12, debouncedSearchQuery); // Fetch 12 items per page with search query
   
-  // We no longer need client-side filtering as it's done server-side
-  const filteredPoems = poems;
+
+  // Infinite scroll with Intersection Observer
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const observerTargetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    // Create new observer if we have a target and more content to load
+    if (observerTargetRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          const target = entries[0];
+          if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        },
+        { threshold: 0.1 }
+      );
+
+      observerRef.current.observe(observerTargetRef.current);
+    }
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, poems.length]);
+
+  // Format poems for grid layout - wrap in useMemo to avoid dependency issues
+  const formattedPoems = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < poems.length; i += 2) {
+      const rowPoems = [poems[i]];
+      if (i + 1 < poems.length) {
+        rowPoems.push(poems[i + 1]);
+      }
+      result.push(rowPoems);
+    }
+    return result;
+  }, [poems]);
+
+  // Render each row of poems (1 or 2 poems per row based on viewport)
+  const ItemRenderer = useCallback(
+    (index: number) => {
+      const rowPoems = formattedPoems[index];
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {rowPoems.map((poem) => (
+            <PoemCard
+              key={poem.id}
+              poem={poem}
+              searchQuery={debouncedSearchQuery}
+            />
+          ))}
+        </div>
+      );
+    },
+    [formattedPoems, debouncedSearchQuery]
+  );
+
+  // Render footer with loading state
+  const FooterRenderer = useCallback(() => {
+    if (isFetchingNextPage) {
+      return (
+        <div className="py-8 flex justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
+        </div>
+      );
+    }
+    
+    if (!hasNextPage && poems.length > 0 && pagesCount > 1) {
+      return (
+        <div className="py-8 flex justify-center">
+          <p className="text-slate-500 text-sm">No more poems to load</p>
+        </div>
+      );
+    }
+    
+    return null;
+  }, [isFetchingNextPage, hasNextPage, poems.length, pagesCount]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4">
@@ -92,40 +173,37 @@ export const PublicPoems = () => {
                 </Link>
               </div>
             </div>
-          ) : filteredPoems.length === 0 ? (
+          ) : poems.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-slate-400">No poems match your search</p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-                {filteredPoems.map(poem => (
-                  <PoemCard
-                    key={poem.id}
-                    poem={poem}
-                    searchQuery={debouncedSearchQuery}
-                  />
+            <div className="pb-20">
+              {/* Using regular mapping with scroll event listener for pagination */}
+              <div className="space-y-6">
+                {formattedPoems.map((rowPoems, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {rowPoems.map((poem) => (
+                      <PoemCard
+                        key={poem.id}
+                        poem={poem}
+                        searchQuery={debouncedSearchQuery}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
               
-              {/* Loading indicator for infinite scroll */}
-              <div className="py-8 flex justify-center">
+              {/* Load observer target and loading indicator */}
+              <div className="py-8 flex justify-center" ref={observerTargetRef}>
                 {isFetchingNextPage && (
                   <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
                 )}
                 {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
                   <p className="text-slate-500 text-sm">No more poems to load</p>
                 )}
-                {hasNextPage && !isFetchingNextPage && (
-                  <button 
-                    onClick={() => fetchNextPage()}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white"
-                  >
-                    Load more
-                  </button>
-                )}
               </div>
-            </>
+            </div>
           )}
         </div>
         
