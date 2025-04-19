@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
@@ -6,7 +6,6 @@ import { getUserInitials } from '../utils/user-utils';
 import { useUserProfile, useUserPoems } from '../hooks/useUserProfile';
 import { useFollowers, useFollowing } from '../hooks/useFollows';
 import FollowButton from '../components/FollowButton';
-import { Poem } from '../hooks/usePoems';
 import { useAuthContext } from '../hooks/useAuthContext';
 
 const UserProfile = () => {
@@ -93,20 +92,6 @@ const UserProfile = () => {
   
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
-  
-  // Handle end reached for poems virtuoso list
-  const handlePoemsEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage && !poemsLoading) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, poemsLoading]);
-  
-  // Handle end reached for drafts virtuoso list
-  const handleDraftsEndReached = useCallback(() => {
-    if (hasNextDraftPage && !isFetchingNextDraftPage && !draftsLoading) {
-      fetchNextDraftPage();
-    }
-  }, [fetchNextDraftPage, hasNextDraftPage, isFetchingNextDraftPage, draftsLoading]);
 
   if (userLoading) {
     return (
@@ -392,7 +377,7 @@ const UserProfile = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-700">
-                    {followers.map(follower => (
+                    {followers?.map(follower => (
                       <div key={follower.id} className="flex justify-between items-center p-3">
                         <Link 
                           to={`/profile/${follower.id}`} 
@@ -424,7 +409,7 @@ const UserProfile = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-700">
-                    {following.map(followedUser => (
+                    {following?.map(followedUser => (
                       <div key={followedUser.id} className="flex justify-between items-center p-3">
                         <Link 
                           to={`/profile/${followedUser.id}`}
