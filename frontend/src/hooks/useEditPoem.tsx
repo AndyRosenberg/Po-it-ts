@@ -301,6 +301,43 @@ export const useEditPoem = () => {
     toast.error(error.message);
   };
 
+  // Publish poem (mark as not a draft)
+  const { mutateAsync: publishPoem, isPending: isPublishing } = useMutation({
+    mutationFn: async () => {
+      if (!poemId) throw new Error('Poem ID is required');
+      
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to publish poem');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidate relevant queries
+      if (poemId) {
+        queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+        queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['feed'] });
+        queryClient.invalidateQueries({ queryKey: ['userPoems'] });
+      }
+      
+      return data;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
   // Complete and view the poem
   const completePoem = async (unsavedTitle?: string, unsavedStanza?: string) => {
     // Submit any unsaved title
@@ -314,6 +351,11 @@ export const useEditPoem = () => {
     }
 
     if (poemId) {
+      // If the poem is currently a draft, publish it
+      if (poemData?.isDraft) {
+        await publishPoem();
+      }
+      
       // Invalidate all poem-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });
@@ -323,7 +365,7 @@ export const useEditPoem = () => {
 
       // Navigate to the poem with the draft state information preserved
       navigate(`/poems/${poemId}`, { 
-        state: { isDraft: poemData?.isDraft } 
+        state: { isDraft: false } // Set isDraft to false since we're publishing
       });
     }
   };
@@ -369,7 +411,7 @@ export const useEditPoem = () => {
   });
 
   // Calculate overall loading state
-  const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle || isConverting;
+  const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle || isConverting || isPublishing;
 
   // Wrap mutations with their success and error handlers
   const addStanzaWithHandlers = async (body: string) => {
@@ -425,6 +467,7 @@ export const useEditPoem = () => {
     reorderStanzas,
     updateTitle: updateTitleWithHandlers,
     convertToDraft,
+    publishPoem,
     completePoem,
   };
 };

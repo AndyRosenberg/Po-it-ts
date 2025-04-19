@@ -231,8 +231,11 @@ export const CreatePoem = () => {
       await updateStanza(activeStanzaId, activeStanzaText);
     }
     
+    // Always pass the current title text, whether it's been saved or not
+    // This ensures the title input field value is what gets saved
+    
     // Now proceed with the normal completion, which will handle title and new stanza
-    await completePoem(editingTitle ? titleText : undefined, newStanzaText || undefined);
+    await completePoem(titleText, newStanzaText || undefined);
   };
 
   return (
@@ -253,7 +256,7 @@ export const CreatePoem = () => {
               
               <UserAvatar />
               
-              {stanzas.length > 0 && (
+              {(stanzas.length > 0 || newStanzaText.trim() || titleText !== "Untitled Poem") && (
                 <button 
                   onClick={handleCompletePoem}
                   className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"

@@ -13,7 +13,7 @@ interface Stanza {
 
 export const useCreatePoem = () => {
   const [stanzas, setStanzas] = useState<Stanza[]>([]);
-  const [poemId, setPoemId] = useState<string | null>(null);
+  const [poemId, setPoemId] = useState<string | undefined>();
   const [poemTitle, setPoemTitle] = useState<string>("Untitled Poem");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -224,28 +224,49 @@ export const useCreatePoem = () => {
 
   // Complete and view the poem
   const completePoem = async (unsavedTitle?: string, unsavedStanza?: string) => {
-    // Submit any unsaved title
-    if (unsavedTitle && unsavedTitle !== poemTitle) {
-      await updateTitle(unsavedTitle);
-    }
-
-    // Submit any unsaved stanza
-    if (unsavedStanza && unsavedStanza.trim()) {
-      await addStanza({
-        body: unsavedStanza.trim()
-      });
-    }
-
-    if (poemId) {
-      // Publish the poem - mark as not a draft
-      await publishPoem(poemId);
+    let currentPoemId = poemId;
+    let updatedPoem: any = null;
+    
+    try {
+      // Step 1: Create the poem if we don't have a poem ID yet
+      if (!currentPoemId) {
+        const newPoem = await createPoem();
+        currentPoemId = newPoem.id;
+      }
       
-      // Invalidate all poem-related queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['my-poems'] });
-      queryClient.invalidateQueries({ queryKey: ['public-poems'] });
-      queryClient.invalidateQueries({ queryKey: ['feed'] });
-      queryClient.invalidateQueries({ queryKey: ['userPoems'] });
-      navigate(`/poems/${poemId}`);
+      // Step 2: Update title if provided (even if it's the same as current, we want to ensure it's saved)
+      if (unsavedTitle !== undefined) {
+        updatedPoem = await updateTitle(unsavedTitle);
+        currentPoemId = updatedPoem.id; // Just to be safe
+      }
+  
+      // Step 3: Add any unsaved stanza
+      if (unsavedStanza && unsavedStanza.trim()) {
+        await addStanza({
+          body: unsavedStanza.trim(),
+          pId: currentPoemId
+        });
+      }
+  
+      // Step 4: Publish the poem only if we have a poem ID
+      if (currentPoemId) {
+        await publishPoem(currentPoemId);
+        
+        // Step 5: Invalidate all poem-related queries to ensure fresh data
+        queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['feed'] });
+        queryClient.invalidateQueries({ queryKey: ['userPoems'] });
+        queryClient.invalidateQueries({ queryKey: ['poem', currentPoemId] });
+        
+        // Step 6: Navigate to the poem view after all operations have completed
+        navigate(`/poems/${currentPoemId}`);
+      } else {
+        console.error("Failed to get a valid poem ID after all operations");
+      }
+    } catch (error) {
+      console.error("Error in completePoem:", error);
+      // Don't navigate if there was an error
     }
   };
 
