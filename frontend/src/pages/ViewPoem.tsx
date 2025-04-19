@@ -186,8 +186,8 @@ export const ViewPoem = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
           ) : poem ? (
-            <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 mb-24">
-              <div className="flex justify-between items-center mb-2">
+            <div className="bg-slate-800 rounded-xl p-5 shadow-xl border border-slate-700 mb-24">
+              <div className="flex justify-between items-center mb-3">
                 <h2 className="text-2xl font-semibold text-white">{poem.title}</h2>
                 
                 {poem.isDraft && (
@@ -197,7 +197,7 @@ export const ViewPoem = () => {
                 )}
               </div>
               
-              <div className="mb-6 flex justify-between items-center">
+              <div className="mb-5 flex justify-between items-center">
                 <div className="text-sm text-slate-400">
                   {formattedDate}
                 </div>
@@ -211,12 +211,12 @@ export const ViewPoem = () => {
                 )}
               </div>
               
-              <div className="space-y-8">
+              <div className="space-y-7">
                 {poem.stanzas.map((stanza) => (
                   <div 
                     key={stanza.id} 
                     onClick={() => handleOpenCommentsDrawer(stanza.id, stanza.body)}
-                    className={`leading-relaxed whitespace-pre-wrap text-slate-200 p-3 rounded-lg 
+                    className={`leading-relaxed whitespace-pre-wrap text-slate-200 py-2 px-3 rounded-lg 
                       hover:bg-slate-700/30 transition-colors cursor-pointer relative
                       ${stanzasWithComments[stanza.id] ? 'border-l-4 border-cyan-500 pl-4' : ''}`}
                   >
@@ -225,7 +225,7 @@ export const ViewPoem = () => {
                 ))}
               </div>
               
-              <div className="mt-10 pt-6 border-t border-slate-700 flex justify-between items-center">
+              <div className="mt-9 pt-5 border-t border-slate-700 flex justify-between items-center">
                 <BackButton 
                   preserveDraftState={true} 
                   className="text-slate-400 hover:text-white transition-colors"
