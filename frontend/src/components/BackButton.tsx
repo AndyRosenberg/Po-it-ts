@@ -9,7 +9,7 @@ type BackButtonProps = {
   children?: React.ReactNode;
 };
 
-// Track whether we're on a create/edit page
+// Track whether a path is a create or edit page
 const isCreateOrEditPage = (path: string): boolean => {
   return path.includes('/create') || (path.includes('/poems/') && path.includes('/edit'));
 };
@@ -28,22 +28,53 @@ export const BackButton = ({
   const handleGoBack = () => {
     // Special handling for draft poems
     if (preserveDraftState) {
-      // Get draft status from either location state or pathname
-      const isDraftPoem = location.pathname.includes('/poems/') && 
-                      (location.state?.isDraft || location.pathname.includes('/edit'));
+      // Check if we're on a poem page
+      const onPoemPage = location.pathname.includes('/poems/') && !location.pathname.includes('/edit');
       
-      // Navigate to drafts tab if appropriate and we have an authenticated user
-      if (isDraftPoem && authUser) {
-        navigate(`/profile/${authUser.id}?tab=drafts`);
-        return;
+      if (onPoemPage) {
+        // Get isDraft from location state or sessionStorage (set during ViewPoem component mount)
+        const isDraft = location.state?.isDraft || sessionStorage.getItem('viewingDraft') === 'true';
+        
+        // Navigate to drafts tab if appropriate and we have an authenticated user
+        if (isDraft && authUser) {
+          // Before navigating, set a flag in localStorage to force drafts tab
+          localStorage.setItem('forceDraftsTab', 'true');
+          
+          // Clear the viewing draft flag
+          sessionStorage.removeItem('viewingDraft');
+          
+          navigate(`/profile/${authUser.id}?tab=drafts`);
+          return;
+        }
       }
     }
     
-    // Check if we're on a create/edit page
-    if (isCreateOrEditPage(location.pathname)) {
-      // When on create/edit, always go to home or fallback path
+    // If we're on a create page, go to fallback
+    if (location.pathname.includes('/create')) {
       navigate(fallbackPath);
       return;
+    }
+    
+    // If we're on an edit page, try to use browser history or go to view mode
+    if (location.pathname.includes('/poems/') && location.pathname.includes('/edit')) {
+      // Try using browser history for normal back navigation
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      } else {
+        // Fallback to view mode for the poem
+        const poemMatch = location.pathname.match(/\/poems\/([^/]+)/);
+        const poemId = poemMatch ? poemMatch[1] : null;
+        
+        if (poemId) {
+          navigate(`/poems/${poemId}`);
+          return;
+        }
+        
+        // Last resort fallback
+        navigate(fallbackPath);
+        return;
+      }
     }
     
     // Check if we're coming from a poem page after publishing
@@ -57,8 +88,15 @@ export const BackButton = ({
       return;
     }
     
-    // If previousPath is a create/edit page or is the current page, go home
-    if (isCreateOrEditPage(previousPath) || previousPath === location.pathname) {
+    // Check if previous path was an edit or create page
+    if (isCreateOrEditPage(previousPath)) {
+      // Don't go back to create or edit pages
+      navigate(fallbackPath);
+      return;
+    }
+    
+    // If we're on the same page somehow, go to fallback
+    if (previousPath === location.pathname) {
       navigate(fallbackPath);
       return;
     }

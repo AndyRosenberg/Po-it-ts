@@ -96,39 +96,76 @@ const UserProfile = () => {
     poems: drafts,
     isLoading: draftsLoading,
     isFetchingNextPage: isFetchingNextDraftPage,
+    fetchNextPage: fetchNextDraftPage,
+    hasNextPage: hasNextDraftPage,
   } = useUserPoems(userId, 12, debouncedSearchQuery, true); // true = drafts only
   
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
   
-  // Set up infinite scrolling
-  const observerTarget = useRef(null);
+  // Set up infinite scrolling 
+  const poemsObserverTarget = useRef(null);
+  const draftsObserverTarget = useRef(null);
 
-  const handleObserver = useCallback(
+  // Observer for regular poems
+  const handlePoemsObserver = useCallback(
     (entries: any) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !poemsLoading) {
+        console.log('Fetching next page of poems');
         fetchNextPage();
       }
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage, poemsLoading]
   );
 
-  // Set up the observer effect
+  // Observer for drafts
+  const handleDraftsObserver = useCallback(
+    (entries: any) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextDraftPage && !isFetchingNextDraftPage && !draftsLoading) {
+        console.log('Fetching next page of drafts');
+        fetchNextDraftPage();
+      }
+    },
+    [fetchNextDraftPage, hasNextDraftPage, isFetchingNextDraftPage, draftsLoading]
+  );
+
+  // Set up the observer effect for poems
   useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
+    if (activeTab !== 'poems') return;
+
+    const observer = new IntersectionObserver(handlePoemsObserver, {
       root: null,
       rootMargin: '0px',
       threshold: 0.1,
     });
     
-    const currentTarget = observerTarget.current;
+    const currentTarget = poemsObserverTarget.current;
     if (currentTarget) observer.observe(currentTarget);
     
     return () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
-  }, [handleObserver]);
+  }, [handlePoemsObserver, activeTab]);
+
+  // Set up the observer effect for drafts
+  useEffect(() => {
+    if (activeTab !== 'drafts') return;
+
+    const observer = new IntersectionObserver(handleDraftsObserver, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+    });
+    
+    const currentTarget = draftsObserverTarget.current;
+    if (currentTarget) observer.observe(currentTarget);
+    
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [handleDraftsObserver, activeTab]);
 
   if (userLoading) {
     return (
@@ -324,11 +361,14 @@ const UserProfile = () => {
                     
                     {/* Loading indicator at the bottom for infinite scroll */}
                     <div 
-                      ref={observerTarget} 
+                      ref={poemsObserverTarget} 
                       className="py-8 flex justify-center"
                     >
                       {isFetchingNextPage && (
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                      )}
+                      {!isFetchingNextPage && hasNextPage && (
+                        <div className="text-sm text-slate-400">Scroll for more</div>
                       )}
                     </div>
                   </>
@@ -385,10 +425,14 @@ const UserProfile = () => {
                     
                     {/* Loading indicator at the bottom for infinite scroll */}
                     <div 
+                      ref={draftsObserverTarget}
                       className="py-8 flex justify-center"
                     >
                       {isFetchingNextDraftPage && (
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                      )}
+                      {!isFetchingNextDraftPage && hasNextDraftPage && (
+                        <div className="text-sm text-slate-400">Scroll for more</div>
                       )}
                     </div>
                   </>
