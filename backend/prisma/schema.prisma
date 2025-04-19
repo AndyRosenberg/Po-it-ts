@@ -41,6 +41,7 @@ model Poem {
   title String @default("Untitled Poem")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isDraft Boolean @default(true)
   userId String
   user User @relation(fields: [userId], references: [id]) 
 

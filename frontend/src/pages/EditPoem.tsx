@@ -158,11 +158,13 @@ export const EditPoem = () => {
     error,
     poemTitle,
     poemId,
+    poemData,
     addStanza, 
     updateStanza, 
     deleteStanza, 
     reorderStanzas,
     updateTitle,
+    convertToDraft,
     completePoem 
   } = useEditPoem();
   const [newStanzaText, setNewStanzaText] = useState('');
@@ -251,18 +253,42 @@ export const EditPoem = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <BackButton />
-              <h1 className="text-2xl font-bold text-white">Edit Poem</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Edit Poem</h1>
+                {poemData && (
+                  <div className="flex items-center mt-1">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      poemData.isDraft 
+                        ? 'bg-amber-500/20 text-amber-200'
+                        : 'bg-green-500/20 text-green-200'
+                    }`}>
+                      {poemData.isDraft ? 'Draft' : 'Published'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <UserAvatar />
+              
+              {/* If published poem, show "Convert to Draft" button */}
+              {poemData && !poemData.isDraft && (
+                <button 
+                  onClick={() => convertToDraft()}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-all"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Converting...' : 'Convert to Draft'}
+                </button>
+              )}
               
               <button 
                 onClick={handleCompletePoem}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
                 disabled={isLoading}
               >
-                {isLoading ? 'Saving...' : 'Done Editing'}
+                {isLoading ? 'Saving...' : poemData?.isDraft ? 'Publish Poem' : 'Done Editing'}
               </button>
             </div>
           </div>

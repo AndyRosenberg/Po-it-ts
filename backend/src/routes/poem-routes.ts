@@ -13,6 +13,8 @@ import {
   updatePoemTitle,
   updateStanza,
   reorderStanzas,
+  publishPoem,
+  convertToDraft,
   getUserPoems
 } from '../controllers/poems-controller.js';
 
@@ -25,13 +27,16 @@ router.get("/feed", protectRoute, getFeedPoems);
 
 // Poem routes - public (all poems)
 router.get("/poems", protectRoute, getAllPoems);
-router.get("/poems/:poemId", protectRoute, getPoemById);
+// User poems route must come before generic poemId route
 router.get("/poems/user/:userId", protectRoute, getUserPoems);
+router.get("/poems/:poemId", protectRoute, getPoemById);
 
 // Poem creation and modification
 router.post("/poems", protectRoute, createPoem);
 router.put("/poems/:poemId/title", protectRoute, updatePoemTitle);
 router.put("/poems/:poemId/reorder", protectRoute, reorderStanzas);
+router.put("/poems/:poemId/publish", protectRoute, publishPoem);
+router.put("/poems/:poemId/draft", protectRoute, convertToDraft);
 router.delete("/poems/:poemId", protectRoute, deletePoem);
 
 // Stanza routes

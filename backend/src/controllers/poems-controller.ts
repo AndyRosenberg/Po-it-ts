@@ -6,9 +6,10 @@ import { Prisma } from "@prisma/client";
 export const getUserPoems = async (request: Request, response: Response) => {
   try {
     const { userId } = request.params;
-    const { cursor, limit = '10', search } = request.query;
+    const { cursor, limit = '10', search, draftsOnly = 'false' } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
+    const showDraftsOnly = draftsOnly === 'true';
     
     // Verify user exists
     const user = await prisma.user.findUnique({
@@ -19,8 +20,14 @@ export const getUserPoems = async (request: Request, response: Response) => {
       return response.status(404).json({ error: "User not found" });
     }
     
+    const isCurrentUserOwner = !!request.user && request.user.id === userId;
+    
     // Base where clause
-    let whereClause: any = { userId };
+    let whereClause: any = { 
+      userId,
+      // Only show drafts if viewing own profile and draftsOnly is true
+      ...(isCurrentUserOwner && showDraftsOnly ? { isDraft: true } : { isDraft: false })
+    };
     let isSearchQuery = false;
 
     // Add search criteria if provided
@@ -92,9 +99,7 @@ export const getUserPoems = async (request: Request, response: Response) => {
     const hasMore = poems.length > finalLimit;
     const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
     const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
-    
-    // Add flag to indicate if current user is the owner
-    const isCurrentUserOwner = !!request.user && request.user.id === userId;
+
     const poemsWithOwnership = paginatedPoems.map(poem => ({
       ...poem,
       isOwner: isCurrentUserOwner
@@ -201,11 +206,12 @@ export const deletePoem = async (request: Request, response: Response) => {
 
 export const createPoem = async (request: Request, response: Response) => {
   try {
-    const { title } = request.body;
+    const { title, isDraft = true } = request.body;
     
     const newPoem = await prisma.poem.create({
       data: {
         userId: request.user.id,
+        isDraft,
         ...(title ? { title } : {})
       }
     });
@@ -220,15 +226,17 @@ export const createPoem = async (request: Request, response: Response) => {
 // Get current user's own poems with cursor-based pagination and fuzzy search
 export const getMyPoems = async (request: Request, response: Response) => {
   try {
-    const { cursor, limit = '10', search } = request.query;
+    const { cursor, limit = '10', search, draftsOnly = 'false' } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
+    const showDraftsOnly = draftsOnly === 'true';
     
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
     // Base query
     let whereClause: any = {
-      userId: request.user.id
+      userId: request.user.id,
+      isDraft: showDraftsOnly ? true : false
     };
     
     let isSearchQuery = false;
@@ -364,8 +372,8 @@ export const getAllPoems = async (request: Request, response: Response) => {
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
-    // Base where clause
-    let whereClause: any = {};
+    // Base where clause - only show published poems
+    let whereClause: any = { isDraft: false };
     
     let isSearchQuery = false;
 
@@ -824,6 +832,88 @@ export const reorderStanzas = async (request: Request, response: Response) => {
   }
 }
 
+// Mark a poem as published (complete)
+export const publishPoem = async (request: Request, response: Response) => {
+  try {
+    const { poemId } = request.params;
+    
+    // Verify the poem belongs to the user
+    const poem = await prisma.poem.findUnique({
+      where: {
+        id: poemId,
+        userId: request.user.id
+      }
+    });
+    
+    if (!poem) {
+      return response.status(404).json({ error: "Poem not found" });
+    }
+    
+    // Update the poem to mark as published (not draft)
+    const updatedPoem = await prisma.poem.update({
+      where: {
+        id: poemId
+      },
+      data: {
+        isDraft: false
+      },
+      include: {
+        stanzas: {
+          orderBy: {
+            position: Prisma.SortOrder.asc
+          }
+        }
+      }
+    });
+    
+    response.status(200).json(updatedPoem);
+  } catch (error: any) {
+    console.error("Error in publishPoem: ", error.message);
+    response.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// Mark a poem as draft
+export const convertToDraft = async (request: Request, response: Response) => {
+  try {
+    const { poemId } = request.params;
+    
+    // Verify the poem belongs to the user
+    const poem = await prisma.poem.findUnique({
+      where: {
+        id: poemId,
+        userId: request.user.id
+      }
+    });
+    
+    if (!poem) {
+      return response.status(404).json({ error: "Poem not found" });
+    }
+    
+    // Update the poem to mark as draft
+    const updatedPoem = await prisma.poem.update({
+      where: {
+        id: poemId
+      },
+      data: {
+        isDraft: true
+      },
+      include: {
+        stanzas: {
+          orderBy: {
+            position: Prisma.SortOrder.asc
+          }
+        }
+      }
+    });
+    
+    response.status(200).json(updatedPoem);
+  } catch (error: any) {
+    console.error("Error in convertToDraft: ", error.message);
+    response.status(500).json({ error: "Internal server error" });
+  }
+}
+
 // Get poems for user's feed (poems from followed users)
 export const getFeedPoems = async (request: Request, response: Response) => {
   try {
@@ -850,10 +940,12 @@ export const getFeedPoems = async (request: Request, response: Response) => {
     const userIdsForFeed = [...currentUser.following.map(user => user.id), currentUser.id];
     
     // Base where clause to get poems from followed users and the user's own poems
+    // Only show published poems, not drafts
     let whereClause: any = {
       userId: {
         in: userIdsForFeed
-      }
+      },
+      isDraft: false
     };
     
     let isSearchQuery = false;

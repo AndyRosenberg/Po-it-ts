@@ -19,6 +19,7 @@ interface Poem {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  isDraft: boolean;
   isOwner?: boolean;
   stanzas: Stanza[];
 }
@@ -325,8 +326,46 @@ export const useEditPoem = () => {
 
   // Remove duplicate effect - already handled in the earlier useEffect (lines 55-65)
 
+  // Convert published poem to draft
+  const { mutateAsync: convertToDraft, isPending: isConverting } = useMutation({
+    mutationFn: async () => {
+      if (!poemId) throw new Error('Poem ID is required');
+      
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/draft`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to convert poem to draft');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidate all relevant queries
+      if (poemId) {
+        queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
+        queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+        queryClient.invalidateQueries({ queryKey: ['feed'] });
+        queryClient.invalidateQueries({ queryKey: ['userPoems'] });
+      }
+      
+      toast.success('Poem converted to draft');
+      return data;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
   // Calculate overall loading state
-  const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle;
+  const isLoading = isFetchingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isReorderingStanzas || isUpdatingTitle || isConverting;
 
   // Wrap mutations with their success and error handlers
   const addStanzaWithHandlers = async (body: string) => {
@@ -381,6 +420,7 @@ export const useEditPoem = () => {
     deleteStanza: deleteStanzaWithHandlers,
     reorderStanzas,
     updateTitle: updateTitleWithHandlers,
+    convertToDraft,
     completePoem,
   };
 };

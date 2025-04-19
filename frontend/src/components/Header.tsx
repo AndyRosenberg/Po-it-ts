@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { UserAvatar } from "./UserAvatar";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 interface HeaderProps {
   label?: string;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 export const Header = ({ label, navLinkPath = '/explore', navLinkLabel = 'Explore' }: HeaderProps) => {
+  const { authUser } = useAuthContext();
+  
   return (
     <header className="py-6 mb-8">
       <div className="flex justify-between items-center">

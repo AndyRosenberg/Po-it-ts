@@ -202,6 +202,26 @@ export const useCreatePoem = () => {
     setStanzas(prev => arrayMove(prev, sourceIndex, destinationIndex));
   };
 
+  // Publish poem (mark as not a draft)
+  const { mutateAsync: publishPoem, isPending: isPublishing } = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${id}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to publish poem');
+      }
+      
+      return response.json();
+    }
+  });
+
   // Complete and view the poem
   const completePoem = async (unsavedTitle?: string, unsavedStanza?: string) => {
     // Submit any unsaved title
@@ -217,6 +237,9 @@ export const useCreatePoem = () => {
     }
 
     if (poemId) {
+      // Publish the poem - mark as not a draft
+      await publishPoem(poemId);
+      
       // Invalidate all poem-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });
@@ -227,7 +250,7 @@ export const useCreatePoem = () => {
   };
 
   // Calculate overall loading state
-  const isLoading = isCreatingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isUpdatingTitle;
+  const isLoading = isCreatingPoem || isAddingStanza || isUpdatingStanza || isDeletingStanza || isUpdatingTitle || isPublishing;
 
   return {
     isLoading,
@@ -248,6 +271,7 @@ export const useCreatePoem = () => {
     deleteStanza,
     reorderStanzas,
     updateTitle,
+    publishPoem,
     completePoem
   };
 };

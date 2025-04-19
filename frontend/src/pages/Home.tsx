@@ -70,7 +70,7 @@ export const Home = () => {
     <div className="w-full max-w-5xl mx-auto px-4">
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
-        <Header label="Feed" />
+        <Header label="Feed" navLinkPath="/explore" navLinkLabel="Explore" />
         
         {/* Search */}
         <div className="relative mb-8">

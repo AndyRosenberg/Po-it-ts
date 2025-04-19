@@ -37,7 +37,7 @@ export const useUserProfile = (userId: string | undefined) => {
 };
 
 // Hook to fetch user's poems with pagination, infinite scroll, and search
-export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQuery?: string) => {
+export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQuery?: string, draftsOnly = false) => {
   const {
     data,
     fetchNextPage,
@@ -47,18 +47,23 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['userPoems', userId, pageSize, searchQuery],
+    queryKey: ['userPoems', userId, pageSize, searchQuery, draftsOnly],
     queryFn: async ({ pageParam = '' }) => {
       if (!userId) return { poems: [], nextCursor: null, totalCount: 0 };
       
       const url = new URL(`${process.env.HOST_DOMAIN}/api/poems/user/${userId}`);
       url.searchParams.append('limit', pageSize.toString());
+      url.searchParams.append('draftsOnly', draftsOnly.toString());
       if (pageParam) {
         url.searchParams.append('cursor', pageParam);
       }
       if (searchQuery) {
         url.searchParams.append('search', searchQuery);
       }
+      
+      // Debug output to help understand API requests
+      console.log('Fetching poems with URL:', url.toString());
+      console.log('draftsOnly parameter:', draftsOnly);
 
       const response = await fetch(url, {
         credentials: 'include',

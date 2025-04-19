@@ -7,9 +7,11 @@ import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { CommentDrawer } from '../components/CommentDrawer';
 import { ShareModal } from '../components/ShareModal';
+import toast from 'react-hot-toast';
 
 interface ExtendedPoem extends Poem {
   isOwner?: boolean;
+  isDraft?: boolean;
   user?: {
     id: string;
     username: string;
@@ -25,6 +27,7 @@ export const ViewPoem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { deletePoem, isLoading: isDeleting, error: deleteError } = useDeletePoem();
+  const [isConverting, setIsConverting] = useState(false);
   
   // Comment drawer state
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
@@ -134,6 +137,38 @@ export const ViewPoem = () => {
     setIsCommentDrawerOpen(true);
   };
 
+  // Convert published poem to draft
+  const handleConvertToDraft = async () => {
+    if (!poemId) return;
+    
+    setIsConverting(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/draft`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to convert poem to draft');
+      }
+      
+      const updatedPoem = await response.json();
+      setPoem(updatedPoem);
+      toast.success('Poem converted to draft');
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Failed to convert poem to draft');
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   // Get current URL for sharing
   const generateShareUrl = () => {
     return window.location.href;
@@ -187,7 +222,15 @@ export const ViewPoem = () => {
             </div>
           ) : poem ? (
             <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
-              <h2 className="text-2xl font-semibold text-white mb-2">{poem.title}</h2>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl font-semibold text-white">{poem.title}</h2>
+                
+                {poem.isDraft && (
+                  <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-200">
+                    Draft
+                  </span>
+                )}
+              </div>
               
               <div className="mb-6 flex justify-between items-center">
                 <div className="text-sm text-slate-400">
@@ -226,19 +269,36 @@ export const ViewPoem = () => {
                 </button>
                 
                 <div className="flex space-x-3">
-                  {/* Only show edit/delete buttons if user is the owner */}
+                  {/* Only show owner buttons if user is the owner */}
                   {poem.isOwner && (
                     <>
+                      {/* Edit button */}
                       <button 
                         onClick={() => navigate(`/poems/${poemId}/edit`)}
                         className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
                         aria-label="Edit poem"
-                        disabled={isDeleting}
+                        disabled={isDeleting || isConverting}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 0 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                         </svg>
                       </button>
+                      
+                      {/* Convert to draft button - only show for published poems */}
+                      {!poem.isDraft && (
+                        <button 
+                          onClick={handleConvertToDraft}
+                          className="p-2 text-slate-400 hover:text-amber-400 transition-colors rounded-full hover:bg-slate-700"
+                          aria-label="Convert to draft"
+                          disabled={isDeleting || isConverting}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487 10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                          </svg>
+                        </button>
+                      )}
+                      
+                      {/* Delete button */}
                       <button 
                         onClick={() => {
                           if (window.confirm('Are you sure you want to delete this poem? This action cannot be undone.')) {
@@ -247,7 +307,7 @@ export const ViewPoem = () => {
                         }}
                         className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-700"
                         aria-label="Delete poem"
-                        disabled={isDeleting}
+                        disabled={isDeleting || isConverting}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -255,6 +315,8 @@ export const ViewPoem = () => {
                       </button>
                     </>
                   )}
+                  
+                  {/* Share button */}
                   <button 
                     onClick={() => setIsShareModalOpen(true)} 
                     className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
