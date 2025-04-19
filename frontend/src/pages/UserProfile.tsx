@@ -93,10 +93,8 @@ const UserProfile = () => {
   
   // Fetch drafts (only for own profile)
   const { 
-    poems: drafts, 
+    poems: drafts,
     isLoading: draftsLoading,
-    fetchNextPage: fetchNextDraftPage,
-    hasNextPage: hasNextDraftPage,
     isFetchingNextPage: isFetchingNextDraftPage,
   } = useUserPoems(userId, 12, debouncedSearchQuery, true); // true = drafts only
   
