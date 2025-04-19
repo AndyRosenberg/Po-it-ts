@@ -1,5 +1,5 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useFeedPoems } from "../hooks/usePoems";
 import { Header } from "../components/Header";
@@ -32,36 +32,12 @@ export const Home = () => {
     pagesCount
   } = useFeedPoems(12, debouncedSearchQuery);
   
-  // Set up infinite scrolling
-  const observerTarget = useRef(null);
-
-  const handleObserver = useCallback(
-    (entries: any) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]
-  );
-
-  // No longer need to calculate initials here
-
-  // Set up the observer effect
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1,
-    });
-    
-    const currentTarget = observerTarget.current;
-    if (currentTarget) observer.observe(currentTarget);
-    
-    return () => {
-      if (currentTarget) observer.unobserve(currentTarget);
-    };
-  }, [handleObserver]);
+  // Handle end reached for Virtuoso infinite scrolling
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && !isLoading) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
 
   // We no longer need client-side filtering as it's done server-side
   const filteredPoems = poems;
@@ -96,7 +72,7 @@ export const Home = () => {
         )}
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1">
           {/* Loading state */}
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
@@ -135,36 +111,40 @@ export const Home = () => {
                 </div>
               </div>
             </div>
+          ) : filteredPoems.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-slate-400">No poems match your search</p>
+            </div>
           ) : (
-            /* Poem list */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-              {filteredPoems.length === 0 ? (
-                <div className="md:col-span-2 text-center py-10">
-                  <p className="text-slate-400">No poems match your search</p>
-                </div>
-              ) : (
-                filteredPoems.map(poem => (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                {filteredPoems.map(poem => (
                   <PoemCard
                     key={poem.id}
                     poem={poem}
                     searchQuery={debouncedSearchQuery}
                   />
-                ))
-              )}
+                ))}
+              </div>
               
-              {/* Loading indicator at the bottom for infinite scroll */}
-              <div 
-                ref={observerTarget} 
-                className="md:col-span-2 py-8 flex justify-center"
-              >
+              {/* Loading indicator for infinite scroll */}
+              <div className="py-8 flex justify-center">
                 {isFetchingNextPage && (
                   <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
                 )}
                 {!hasNextPage && poems.length > 0 && pagesCount > 1 && (
                   <p className="text-slate-500 text-sm">No more poems to load</p>
                 )}
+                {hasNextPage && !isFetchingNextPage && (
+                  <button 
+                    onClick={() => fetchNextPage()}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white"
+                  >
+                    Load more
+                  </button>
+                )}
               </div>
-            </div>
+            </>
           )}
         </div>
         

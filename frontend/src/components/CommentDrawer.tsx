@@ -208,7 +208,7 @@ export const CommentDrawer = ({
           ) : (
             <>
               <div className="space-y-4">
-                {comments.map((comment) => (
+                {comments.map(comment => (
                   <div
                     key={comment.id}
                     className="bg-slate-800 rounded-lg p-4 border border-slate-700"
@@ -309,7 +309,8 @@ export const CommentDrawer = ({
                     )}
                   </div>
                 ))}
-
+                
+                {/* Load more button */}
                 {hasMoreComments && !loadingMore && (
                   <div className="flex justify-center py-4">
                     <button 
@@ -321,7 +322,6 @@ export const CommentDrawer = ({
                   </div>
                 )}
                 
-
                 {loadingMore && (
                   <div className="flex justify-center py-4">
                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-cyan-500"></div>

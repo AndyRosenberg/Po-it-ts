@@ -94,34 +94,19 @@ const UserProfile = () => {
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
   
-  // Set up infinite scrolling
-  const observerTarget = useRef(null);
-
-  const handleObserver = useCallback(
-    (entries: any) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !poemsLoading) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage, poemsLoading]
-  );
-
-  // Set up the observer effect
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1,
-    });
-    
-    const currentTarget = observerTarget.current;
-    if (currentTarget) observer.observe(currentTarget);
-    
-    return () => {
-      if (currentTarget) observer.unobserve(currentTarget);
-    };
-  }, [handleObserver]);
+  // Handle end reached for poems virtuoso list
+  const handlePoemsEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && !poemsLoading) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, poemsLoading]);
+  
+  // Handle end reached for drafts virtuoso list
+  const handleDraftsEndReached = useCallback(() => {
+    if (hasNextDraftPage && !isFetchingNextDraftPage && !draftsLoading) {
+      fetchNextDraftPage();
+    }
+  }, [fetchNextDraftPage, hasNextDraftPage, isFetchingNextDraftPage, draftsLoading]);
 
   if (userLoading) {
     return (
@@ -290,7 +275,7 @@ const UserProfile = () => {
                   />
                 </div>
                 
-                {poemsLoading && !isFetchingNextPage ? (
+                {poemsLoading ? (
                   <div className="flex justify-center my-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
                   </div>
@@ -299,32 +284,34 @@ const UserProfile = () => {
                     <p className="text-slate-400">No poems yet</p>
                   </div>
                 ) : (
-                  <>
-                    <div className="space-y-4">
-                      {poems?.map((poem: Poem) => (
-                        <div 
-                          key={poem.id} 
-                          onClick={() => navigate(`/poems/${poem.id}`)}
-                          className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
-                        >
-                          <h3 className="text-lg font-medium text-white mb-2">{poem.title}</h3>
-                          <p className="text-sm text-slate-400">
-                            {new Date(poem.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="space-y-4">
+                    {poems.map(poem => (
+                      <div 
+                        key={poem.id}
+                        onClick={() => navigate(`/poems/${poem.id}`)}
+                        className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                      >
+                        <h3 className="text-lg font-medium text-white mb-2">{poem.title}</h3>
+                        <p className="text-sm text-slate-400">
+                          {new Date(poem.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
                     
-                    {/* Loading indicator at the bottom for infinite scroll */}
-                    <div 
-                      ref={observerTarget} 
-                      className="py-8 flex justify-center"
-                    >
+                    <div className="py-8 flex justify-center">
                       {isFetchingNextPage && (
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
                       )}
+                      {hasNextPage && !isFetchingNextPage && (
+                        <button 
+                          onClick={() => fetchNextPage()}
+                          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white"
+                        >
+                          Load more
+                        </button>
+                      )}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -348,7 +335,7 @@ const UserProfile = () => {
                   />
                 </div>
                 
-                {draftsLoading && !isFetchingNextDraftPage ? (
+                {draftsLoading ? (
                   <div className="flex justify-center my-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
                   </div>
@@ -357,34 +344,37 @@ const UserProfile = () => {
                     <p className="text-slate-400">No drafts yet</p>
                   </div>
                 ) : (
-                  <>
-                    <div className="space-y-4">
-                      {drafts?.map((poem: Poem) => (
-                        <div 
-                          key={poem.id} 
-                          onClick={() => navigate(`/poems/${poem.id}`)}
-                          className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
-                        >
-                          <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-medium text-white mb-2">{poem.title}</h3>
-                            <span className="px-2 py-1 text-xs rounded-md bg-amber-500/20 text-amber-200">Draft</span>
-                          </div>
-                          <p className="text-sm text-slate-400">
-                            Last updated: {new Date(poem.updatedAt).toLocaleDateString()}
-                          </p>
+                  <div className="space-y-4">
+                    {drafts.map(draft => (
+                      <div 
+                        key={draft.id}
+                        onClick={() => navigate(`/poems/${draft.id}`)}
+                        className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-lg font-medium text-white mb-2">{draft.title}</h3>
+                          <span className="px-2 py-1 text-xs rounded-md bg-amber-500/20 text-amber-200">Draft</span>
                         </div>
-                      ))}
-                    </div>
+                        <p className="text-sm text-slate-400">
+                          Last updated: {new Date(draft.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
                     
-                    {/* Loading indicator at the bottom for infinite scroll */}
-                    <div 
-                      className="py-8 flex justify-center"
-                    >
+                    <div className="py-8 flex justify-center">
                       {isFetchingNextDraftPage && (
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
                       )}
+                      {hasNextDraftPage && !isFetchingNextDraftPage && (
+                        <button 
+                          onClick={() => fetchNextDraftPage()}
+                          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white"
+                        >
+                          Load more
+                        </button>
+                      )}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -401,9 +391,9 @@ const UserProfile = () => {
                     <p className="text-slate-400">No followers yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {followers?.map(follower => (
-                      <div key={follower.id} className="flex justify-between items-center p-3 border-b border-slate-700">
+                  <div className="divide-y divide-slate-700">
+                    {followers.map(follower => (
+                      <div key={follower.id} className="flex justify-between items-center p-3">
                         <Link 
                           to={`/profile/${follower.id}`} 
                           className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors"
@@ -433,19 +423,19 @@ const UserProfile = () => {
                     <p className="text-slate-400">Not following anyone yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {following?.map(followed => (
-                      <div key={followed.id} className="flex justify-between items-center p-3 border-b border-slate-700">
+                  <div className="divide-y divide-slate-700">
+                    {following.map(followedUser => (
+                      <div key={followedUser.id} className="flex justify-between items-center p-3">
                         <Link 
-                          to={`/profile/${followed.id}`} 
+                          to={`/profile/${followedUser.id}`}
                           className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors"
                         >
                           <div className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-700 text-white text-sm">
-                            {getUserInitials(followed.username)}
+                            {getUserInitials(followedUser.username)}
                           </div>
-                          <span>{followed.username}</span>
+                          <span>{followedUser.username}</span>
                         </Link>
-                        <FollowButton userId={followed.id} size="sm" />
+                        <FollowButton userId={followedUser.id} size="sm" />
                       </div>
                     ))}
                   </div>
