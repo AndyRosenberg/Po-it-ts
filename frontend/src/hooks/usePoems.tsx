@@ -29,6 +29,7 @@ export interface SearchMatches {
 }
 
 export interface Poem {
+  isDraft: boolean;
   id: string;
   title: string;
   userId: string;

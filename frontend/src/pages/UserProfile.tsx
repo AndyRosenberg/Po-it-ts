@@ -57,7 +57,16 @@ const UserProfile = () => {
     } else if (tabParam === 'followers' || tabParam === 'following') {
       setActiveTab(tabParam);
     } else {
-      setActiveTab('poems');
+      // Check if we want to force drafts tab based on localStorage
+      const forceDraftsTab = localStorage.getItem('forceDraftsTab') === 'true';
+      
+      if (forceDraftsTab && isOwnProfile) {
+        setActiveTab('drafts');
+        navigate(`/profile/${userId}?tab=drafts`, { replace: true });
+        localStorage.removeItem('forceDraftsTab');
+      } else {
+        setActiveTab('poems');
+      }
     }
   }, [location.search, userId, isOwnProfile, navigate]);
   

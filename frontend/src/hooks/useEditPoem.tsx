@@ -320,7 +320,11 @@ export const useEditPoem = () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['userPoems'] });
       queryClient.invalidateQueries({ queryKey: ['poem', poemId] });
-      navigate(`/poems/${poemId}`);
+
+      // Navigate to the poem with the draft state information preserved
+      navigate(`/poems/${poemId}`, { 
+        state: { isDraft: poemData?.isDraft } 
+      });
     }
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useEditPoem } from '../hooks/useEditPoem';
 import { UserAvatar } from '../components/UserAvatar';
@@ -152,6 +152,7 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
 export const EditPoem = () => {
   useAuthRedirect();
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     stanzas, 
     isLoading,
@@ -240,8 +241,19 @@ export const EditPoem = () => {
       await updateStanza(activeStanzaId, activeStanzaText);
     }
     
+    // Check if we came from a draft view (either from location state or if the poem is currently a draft)
+    const isDraft = location.state?.isDraft || poemData?.isDraft;
+    
     // Now proceed with the normal completion, which will handle title and new stanza
     await completePoem(editingTitle ? titleText : undefined, newStanzaText || undefined);
+    
+    // If it was a draft and the user was viewing drafts, navigate back to drafts tab
+    if (isDraft && poemData?.isOwner) {
+      // Before navigating, set a flag in localStorage
+      localStorage.setItem('forceDraftsTab', 'true');
+      navigate(`/profile/${poemData.userId}?tab=drafts`);
+      return;
+    }
   };
 
   return (
@@ -252,24 +264,21 @@ export const EditPoem = () => {
         <header className="py-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <BackButton />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Edit Poem</h1>
-                {poemData && (
-                  <div className="flex items-center mt-1">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      poemData.isDraft 
-                        ? 'bg-amber-500/20 text-amber-200'
-                        : 'bg-green-500/20 text-green-200'
-                    }`}>
-                      {poemData.isDraft ? 'Draft' : 'Published'}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <BackButton preserveDraftState={true} />
+              <h1 className="text-2xl font-bold text-white">Edit Poem</h1>
             </div>
             
             <div className="flex items-center space-x-3">
+              {poemData && (
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  poemData.isDraft 
+                    ? 'bg-amber-500/20 text-amber-200'
+                    : 'bg-green-500/20 text-green-200'
+                }`}>
+                  {poemData.isDraft ? 'Draft' : 'Published'}
+                </span>
+              )}
+              
               <UserAvatar />
               
               {/* If published poem, show "Convert to Draft" button */}

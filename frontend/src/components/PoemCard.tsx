@@ -31,7 +31,10 @@ export const PoemCard: React.FC<PoemCardProps> = ({
       key={poem.id}
       className="block bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-cyan-600/30 hover:bg-slate-800/80 transition-colors shadow-md hover:shadow-cyan-500/10"
     >
-      <Link to={`/poems/${poem.id}`} className="block">
+      <Link 
+        to={`/poems/${poem.id}`} 
+        state={{ isDraft: poem.isDraft }}
+        className="block">
         <div className="mb-2 font-medium text-white text-lg">
           {poem.title}
         </div>
