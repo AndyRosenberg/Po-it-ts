@@ -1,5 +1,5 @@
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFeedPoems } from "../hooks/usePoems";
 import { Header } from "../components/Header";
@@ -31,13 +31,6 @@ export const Home = () => {
     isFetchingNextPage,
     pagesCount
   } = useFeedPoems(12, debouncedSearchQuery);
-  
-  // Handle end reached for Virtuoso infinite scrolling
-  const handleEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage && !isLoading) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading]);
 
   // We no longer need client-side filtering as it's done server-side
   const filteredPoems = poems;
