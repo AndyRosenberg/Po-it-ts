@@ -9,6 +9,8 @@ export const Home = () => {
   useAuthRedirect();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20); // Show first 20 poems initially
+  const loaderRef = useRef<HTMLDivElement>(null);
   
   // Set up search debounce
   useEffect(() => {
@@ -32,38 +34,7 @@ export const Home = () => {
     pagesCount
   } = useFeedPoems(12, debouncedSearchQuery);
 
-
-  // Infinite scroll with Intersection Observer
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const observerTargetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Clean up previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    // Create new observer if we have a target and more content to load
-    if (observerTargetRef.current) {
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          const target = entries[0];
-          if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        },
-        { threshold: 0.1 }
-      );
-
-      observerRef.current.observe(observerTargetRef.current);
-    }
-
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, poems.length]);
-
-  // Format poems for grid layout - wrap in useMemo to avoid dependency issues
+  // Format poems for grid layout
   const formattedPoems = useMemo(() => {
     const result = [];
     for (let i = 0; i < poems.length; i += 2) {
@@ -76,45 +47,41 @@ export const Home = () => {
     return result;
   }, [poems]);
 
-  // Render each row of poems (1 or 2 poems per row based on viewport)
-  const ItemRenderer = useCallback(
-    (index: number) => {
-      const rowPoems = formattedPoems[index];
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {rowPoems.map((poem) => (
-            <PoemCard
-              key={poem.id}
-              poem={poem}
-              searchQuery={debouncedSearchQuery}
-            />
-          ))}
-        </div>
-      );
-    },
-    [formattedPoems, debouncedSearchQuery]
-  );
+  // Set up intersection observer for infinite scrolling
+  useEffect(() => {
+    if (!loaderRef.current) return;
+    
+    const observer = new IntersectionObserver(entries => {
+      const target = entries[0];
+      if (target.isIntersecting) {
+        // When loader is visible, either load more poems or show more of what we have
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        } else if (visibleCount < formattedPoems.length) {
+          // Show more poems from what we've already loaded
+          setVisibleCount(prev => Math.min(prev + 10, formattedPoems.length));
+        }
+      }
+    }, { rootMargin: '200px' });
+    
+    observer.observe(loaderRef.current);
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, formattedPoems.length, visibleCount]);
 
-  // Render footer with loading state
-  const FooterRenderer = useCallback(() => {
-    if (isFetchingNextPage) {
-      return (
-        <div className="py-8 flex justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-        </div>
-      );
+  // When new poems are loaded, update visible count if needed
+  useEffect(() => {
+    if (formattedPoems.length > 0 && visibleCount < 10) {
+      setVisibleCount(Math.min(20, formattedPoems.length));
     }
-    
-    if (!hasNextPage && poems.length > 0 && pagesCount > 1) {
-      return (
-        <div className="py-8 flex justify-center">
-          <p className="text-slate-500 text-sm">No more poems to load</p>
-        </div>
-      );
-    }
-    
-    return null;
-  }, [isFetchingNextPage, hasNextPage, poems.length, pagesCount]);
+  }, [formattedPoems.length, visibleCount]);
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [debouncedSearchQuery]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4">
@@ -191,10 +158,10 @@ export const Home = () => {
             </div>
           ) : (
             <div className="pb-20">
-              {/* Using regular mapping with scroll event listener for pagination */}
+              {/* Render all poems without virtualization */}
               <div className="space-y-6">
-                {formattedPoems.map((rowPoems, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {formattedPoems.slice(0, visibleCount).map((rowPoems, index) => (
+                  <div key={`row-${index}-${rowPoems[0].id}`} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {rowPoems.map((poem) => (
                       <PoemCard
                         key={poem.id}
@@ -206,8 +173,8 @@ export const Home = () => {
                 ))}
               </div>
               
-              {/* Load observer target and loading indicator */}
-              <div className="py-8 flex justify-center" ref={observerTargetRef}>
+              {/* Load more trigger and loading indicator */}
+              <div className="py-8 flex justify-center" ref={loaderRef}>
                 {isFetchingNextPage && (
                   <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
                 )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SearchMatches } from '../hooks/usePoems';
 
 interface SearchMatchHighlightsProps {
@@ -6,7 +6,7 @@ interface SearchMatchHighlightsProps {
   searchQuery: string;
 }
 
-export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({ 
+export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = React.memo(({ 
   searchMatches, 
   searchQuery 
 }) => {
@@ -16,7 +16,7 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
   }
 
   // Get the search term length for highlighting
-  const searchTermLength = searchQuery.trim().length;
+  const searchTermLength = useMemo(() => searchQuery.trim().length, [searchQuery]);
 
   // Format a snippet with highlighted text
   const formatSnippet = (snippet: string, matchIndex: number) => {
@@ -34,6 +34,16 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
       </>
     );
   };
+
+  // Memoize the stanza matches to avoid re-rendering
+  const stanzaMatches = useMemo(() => {
+    return searchMatches.matchingStanzas.map((stanza) => (
+      <div key={stanza.id} className="line-clamp-2">
+        <span className="text-cyan-400 font-medium">Stanza {stanza.position + 1}:</span>{' '}
+        <span className="whitespace-pre-wrap">{formatSnippet(stanza.snippet, stanza.matchIndex)}</span>
+      </div>
+    ));
+  }, [searchMatches.matchingStanzas, searchTermLength]);
 
   return (
     <div className="mt-3 text-xs">
@@ -53,13 +63,8 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
         )}
         
         {/* Show stanza matches */}
-        {searchMatches.matchingStanzas.map((stanza) => (
-          <div key={stanza.id} className="line-clamp-2">
-            <span className="text-cyan-400 font-medium">Stanza {stanza.position + 1}:</span>{' '}
-            <span className="whitespace-pre-wrap">{formatSnippet(stanza.snippet, stanza.matchIndex)}</span>
-          </div>
-        ))}
+        {stanzaMatches}
       </div>
     </div>
   );
-};
+});
