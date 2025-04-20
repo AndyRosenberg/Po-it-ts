@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { isCreateOrEditPage } from '../components/BackButton';
+import { useNavigation } from '../contexts/NavigationContext';
 
 export const useDeletePoem = () => {
   const navigate = useNavigate();
+  const { previousPath } = useNavigation();
   const queryClient = useQueryClient();
 
   const { mutate: deletePoem, isPending: isLoading, error } = useMutation({
@@ -24,14 +27,29 @@ export const useDeletePoem = () => {
     },
     onSuccess: () => {
       toast.success('Poem deleted successfully');
-      // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });
-      // Invalidate feed to update the home page
       queryClient.invalidateQueries({ queryKey: ['feed'] });
-      // Also invalidate userPoems query to update the profile page
       queryClient.invalidateQueries({ queryKey: ['userPoems'] });
-      navigate(-1);
+
+      const preventBackToCreate = sessionStorage.getItem('preventBackToCreate') === 'true';
+      if (preventBackToCreate && location.pathname.includes('/poems/') && !location.pathname.includes('/edit')) {
+        sessionStorage.removeItem('preventBackToCreate');
+
+        navigate('/');
+        return;
+      }
+
+      if (isCreateOrEditPage(previousPath)) {
+        navigate('/');
+        return;
+      }
+
+      if (previousPath === location.pathname) {
+        navigate('/');
+      }
+
+      navigate(previousPath);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete poem');

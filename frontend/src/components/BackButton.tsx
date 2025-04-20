@@ -11,7 +11,7 @@ type BackButtonProps = {
 };
 
 // Track whether a path is a create or edit page
-const isCreateOrEditPage = (path: string): boolean => {
+export const isCreateOrEditPage = (path: string): boolean => {
   return path.includes('/create') || (path.includes('/poems/') && path.includes('/edit'));
 };
 
