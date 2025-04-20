@@ -72,8 +72,30 @@ export const BackButton = ({
         
         // Preserve draft if there's a valid title OR at least one stanza
         if (hasValidTitle || hasAtLeastOneStanza) {
-          // Bust the cache for my-poems query to ensure fresh data after draft saved
+          // More aggressive cache invalidation to ensure fresh data
+          // Invalidate all relevant queries that might contain poems
           queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+          // Invalidate all user poems queries as they might contain drafts
+          queryClient.invalidateQueries({ queryKey: ['userPoems'] });
+          
+          if (authUser) {
+            // Specifically invalidate this user's poems in the drafts tab
+            queryClient.invalidateQueries({ 
+              queryKey: ['userPoems', authUser.id], 
+              refetchType: 'all' 
+            });
+          }
+          
+          // Force an immediate refetch to ensure data is fresh
+          setTimeout(() => {
+            if (authUser) {
+              // Refetch just to be extra certain the drafts are refreshed
+              queryClient.refetchQueries({ 
+                queryKey: ['userPoems', authUser.id, 10, undefined, true],
+                exact: false
+              });
+            }
+          }, 10);
           
           // Let default navigation happen (useCreatePoem will auto-save)
           // The current implementation creates a draft as soon as you edit title or add stanza
