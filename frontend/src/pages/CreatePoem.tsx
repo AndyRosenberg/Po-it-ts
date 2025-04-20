@@ -28,17 +28,16 @@ interface StanzaCardProps {
   body: string;
   onUpdate: (id: string, body: string) => void;
   onDelete: (id: string) => void;
+  disabled: boolean;
 }
 
-const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) => {
+const SortableStanzaCard = ({ id, body, onUpdate, onDelete, disabled }: StanzaCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [stanzaText, setStanzaText] = useState(body);
   const charCount = stanzaText.length;
   const charsRemaining = MAX_STANZA_CHARS - charCount;
   const isOverLimit = charCount > MAX_STANZA_CHARS;
-  
-  // Removed auto-save on unmount - we only want to save when explicitly requested
-  
+
   const { 
     attributes, 
     listeners, 
@@ -76,8 +75,8 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
       <div className="flex justify-between items-start mb-3">
         <div 
           {...attributes}
-          {...listeners}
-          className="p-1 cursor-move text-slate-400 hover:text-slate-300"
+          {...(disabled ? [] : listeners)}
+          className={`p-1 text-slate-400 hover:text-slate-300 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-move'}`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
@@ -86,7 +85,8 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
         <div className="space-x-2">
           <button 
             onClick={() => setIsEditing(!isEditing)}
-            className="p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+            className="p-1 text-slate-400 hover:text-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={disabled}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
@@ -94,7 +94,8 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
           </button>
           <button 
             onClick={() => onDelete(id)}
-            className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1 text-slate-400 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={disabled}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -106,10 +107,11 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
       {isEditing ? (
         <div>
           <textarea
-            className={`w-full p-2 bg-slate-700 text-white border ${isOverLimit ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[100px]`}
+            className={`w-full p-2 disabled:opacity-50 disabled:cursor-not-allowed bg-slate-700 text-white border ${isOverLimit ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[100px]`}
             value={stanzaText}
             onChange={handleStanzaChange}
             maxLength={MAX_STANZA_CHARS}
+            disabled={disabled}
           />
           <div className="flex justify-between mt-3">
             <div className={`text-sm ${
@@ -124,14 +126,15 @@ const SortableStanzaCard = ({ id, body, onUpdate, onDelete }: StanzaCardProps) =
             <div className="space-x-2">
               <button 
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+                className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={disabled}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSave}
-                className={`px-3 py-1 ${isOverLimit ? 'bg-slate-600 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-500'} text-white rounded-md`}
-                disabled={isOverLimit}
+                className={`px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed ${isOverLimit ? 'bg-slate-600 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-500'} text-white rounded-md`}
+                disabled={isOverLimit || disabled}
               >
                 Save
               </button>
@@ -285,6 +288,7 @@ export const CreatePoem = () => {
               <button 
                 onClick={() => setEditingTitle(!editingTitle)}
                 className="p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+                disabled={isLoading}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
@@ -296,21 +300,24 @@ export const CreatePoem = () => {
               <div>
                 <input
                   type="text"
-                  className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   value={titleText}
                   onChange={(e) => setTitleText(e.target.value)}
                   placeholder="Enter poem title..."
+                  disabled={isLoading}
                 />
                 <div className="flex justify-end mt-3 space-x-2">
                   <button 
                     onClick={() => setEditingTitle(false)}
-                    className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+                    className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={handleTitleUpdate}
-                    className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500"
+                    className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
                   >
                     Save
                   </button>
@@ -339,6 +346,7 @@ export const CreatePoem = () => {
                     body={stanza.body}
                     onUpdate={updateStanza}
                     onDelete={deleteStanza}
+                    disabled={isLoading}
                   />
                 ))}
               </div>
@@ -349,7 +357,7 @@ export const CreatePoem = () => {
           <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 shadow-lg">
             <h3 className="text-lg font-medium text-white mb-3">Add a new stanza</h3>
             <textarea
-              className={`w-full p-3 bg-slate-700 text-white border ${newStanzaText.length > MAX_STANZA_CHARS ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]`}
+              className={`w-full p-3 bg-slate-700 text-white disabled:opacity-50 disabled:cursor-not-allowed border ${newStanzaText.length > MAX_STANZA_CHARS ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]`}
               placeholder="Write your stanza here..."
               value={newStanzaText}
               onChange={(e) => {
@@ -359,6 +367,7 @@ export const CreatePoem = () => {
                 }
               }}
               maxLength={MAX_STANZA_CHARS}
+              disabled={isLoading}
             />
             <div className={`text-sm mt-2 ${
               MAX_STANZA_CHARS - newStanzaText.length <= 30 
