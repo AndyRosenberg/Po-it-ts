@@ -36,28 +36,20 @@ const UserProfile = () => {
     const queryParams = new URLSearchParams(location.search);
     const tabParam = queryParams.get('tab');
     
-    // Debug URL parameters
-    console.log('URL parameters:', { 
-      queryParams: Object.fromEntries(queryParams.entries()),
-      tabParam,
-      isOwnProfile 
-    });
+    // Process URL parameters
     
     // For 'drafts' tab, only activate if it's the user's own profile
     if (tabParam === 'drafts') {
       if (isOwnProfile) {
         setActiveTab('drafts');
-        console.log('Showing drafts tab');
       } else {
-        // If trying to view someone else's drafts, redirect to their poems
         setActiveTab('poems');
         navigate(`/profile/${userId}`, { replace: true });
-        console.log('Redirected from drafts to poems');
+        // Redirect from drafts to poems
       }
     } else if (tabParam === 'followers' || tabParam === 'following') {
       setActiveTab(tabParam);
     } else {
-      // Check if we want to force drafts tab based on localStorage
       const forceDraftsTab = localStorage.getItem('forceDraftsTab') === 'true';
       
       if (forceDraftsTab && isOwnProfile) {
@@ -76,8 +68,7 @@ const UserProfile = () => {
       const isOwn = currentUser.id === userId;
       setIsOwnProfile(isOwn);
       
-      // Debug info
-      console.log('Auth state:', { currentUser, userId, isOwner: isOwn });
+      // Set isOwnProfile state
     }
   }, [currentUser, userId, authLoading]);
 
@@ -112,7 +103,7 @@ const UserProfile = () => {
     (entries: any) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !poemsLoading) {
-        console.log('Fetching next page of poems');
+        // Fetch next page of poems
         fetchNextPage();
       }
     },
@@ -124,7 +115,7 @@ const UserProfile = () => {
     (entries: any) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextDraftPage && !isFetchingNextDraftPage && !draftsLoading) {
-        console.log('Fetching next page of drafts');
+        // Fetch next page of drafts
         fetchNextDraftPage();
       }
     },
@@ -201,7 +192,7 @@ const UserProfile = () => {
         <header className="py-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <BackButton />
+              <BackButton fallbackPath="/" forceUseDefault={true} />
               <h1 className="text-2xl font-bold text-white">Profile</h1>
             </div>
           </div>

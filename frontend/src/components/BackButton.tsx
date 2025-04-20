@@ -7,6 +7,7 @@ type BackButtonProps = {
   preserveDraftState?: boolean;
   fallbackPath?: string;
   children?: React.ReactNode;
+  forceUseDefault?: boolean; // Force using the fallback path instead of navigation history
 };
 
 // Track whether a path is a create or edit page
@@ -18,7 +19,8 @@ export const BackButton = ({
   className = "", 
   preserveDraftState = false,
   fallbackPath = '/',
-  children
+  children,
+  forceUseDefault = false
 }: BackButtonProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +28,12 @@ export const BackButton = ({
   const { previousPath } = useNavigation();
   
   const handleGoBack = () => {
+    // If forceUseDefault is true, always go to the fallback path
+    if (forceUseDefault) {
+      navigate(fallbackPath);
+      return;
+    }
+
     // Special handling for draft poems
     if (preserveDraftState) {
       // Check if we're on a poem page
@@ -87,7 +95,7 @@ export const BackButton = ({
       navigate(fallbackPath);
       return;
     }
-    
+
     // Check if previous path was an edit or create page
     if (isCreateOrEditPage(previousPath)) {
       // Don't go back to create or edit pages

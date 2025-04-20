@@ -10,6 +10,11 @@ export const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
+  // Track that we're on the feed page
+  useEffect(() => {
+    localStorage.setItem('lastMainPage', 'feed');
+  }, []);
+  
   // Set up search debounce
   useEffect(() => {
     const timerId = setTimeout(() => {

@@ -61,9 +61,7 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
         url.searchParams.append('search', searchQuery);
       }
       
-      // Debug output to help understand API requests
-      console.log('Fetching poems with URL:', url.toString());
-      console.log('draftsOnly parameter:', draftsOnly);
+      // Fetch poems using constructed URL
 
       const response = await fetch(url, {
         credentials: 'include',

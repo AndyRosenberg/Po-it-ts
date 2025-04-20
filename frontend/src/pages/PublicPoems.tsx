@@ -10,6 +10,11 @@ export const PublicPoems = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
+  // Track that we're on the explore page
+  useEffect(() => {
+    localStorage.setItem('lastMainPage', 'explore');
+  }, []);
+  
   // Set up search debounce
   useEffect(() => {
     const timerId = setTimeout(() => {

@@ -24,11 +24,14 @@ export const useDeletePoem = () => {
     },
     onSuccess: () => {
       toast.success('Poem deleted successfully');
-      navigate('/');
-      
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['my-poems'] });
       queryClient.invalidateQueries({ queryKey: ['public-poems'] });
+      // Invalidate feed to update the home page
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      // Also invalidate userPoems query to update the profile page
+      queryClient.invalidateQueries({ queryKey: ['userPoems'] });
+      navigate(-1);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete poem');

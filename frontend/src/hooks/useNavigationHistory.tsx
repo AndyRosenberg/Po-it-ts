@@ -16,6 +16,7 @@ export const useNavigationHistory = () => {
       // Store current path as previous for the next navigation
       previousPathRef.current = location.pathname;
     }
+    
   }, [location.pathname]);
 
   return {
