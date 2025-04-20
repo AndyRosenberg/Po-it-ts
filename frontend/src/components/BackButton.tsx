@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useNavigation } from "../contexts/NavigationContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 type BackButtonProps = {
   className?: string;
@@ -26,6 +27,7 @@ export const BackButton = ({
   const location = useLocation();
   const { authUser } = useAuthContext();
   const { previousPath } = useNavigation();
+  const queryClient = useQueryClient();
   
   const handleGoBack = () => {
     // If forceUseDefault is true, always go to the fallback path
@@ -57,8 +59,30 @@ export const BackButton = ({
       }
     }
     
-    // If we're on a create page, go to fallback
+    // If we're on a create page, verify if we should preserve draft state based on content
     if (location.pathname.includes('/create')) {
+      // Only preserveDraftState if explicitly requested AND there's enough content to save
+      if (preserveDraftState) {
+        // Get stanzas and title from DOM to check if there's enough content to save
+        const stanzaElements = document.querySelectorAll('[data-stanza-id]');
+        const titleElement = document.querySelector('.bg-slate-800 .text-xl.text-slate-200.font-medium');
+        const title = titleElement?.textContent || '';
+        const hasValidTitle = title && title !== 'Untitled Poem';
+        const hasAtLeastOneStanza = stanzaElements.length > 0;
+        
+        // Preserve draft if there's a valid title OR at least one stanza
+        if (hasValidTitle || hasAtLeastOneStanza) {
+          // Bust the cache for my-poems query to ensure fresh data after draft saved
+          queryClient.invalidateQueries({ queryKey: ['my-poems'] });
+          
+          // Let default navigation happen (useCreatePoem will auto-save)
+          // The current implementation creates a draft as soon as you edit title or add stanza
+          navigate(fallbackPath);
+          return;
+        }
+      }
+      
+      // If we don't have enough content, simply navigate away without preserving draft
       navigate(fallbackPath);
       return;
     }
