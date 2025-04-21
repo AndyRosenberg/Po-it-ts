@@ -284,7 +284,7 @@ export const CreatePoem = () => {
           {/* Loading overlay for when we're updating but already have stanzas loaded */}
           {isLoading && (
             <div className="absolute inset-0 bg-gray-800 opacity-50 z-10 flex justify-center items-center">
-              <div className="animate-spin opacity-100 rounded-full h-32 w-32 z-11 border-t-3 border-b-3 border-cyan-500"></div>
+              <div className="animate-spin opacity-100 rounded-full h-12 w-12 z-11 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
           )}
 

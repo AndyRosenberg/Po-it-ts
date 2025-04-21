@@ -176,7 +176,7 @@ export const EditPoem = () => {
   const [newStanzaText, setNewStanzaText] = useState('');
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleText, setTitleText] = useState('');
-  
+
   // Keep titleText in sync with poemTitle
   useEffect(() => {
     setTitleText(poemTitle);
@@ -320,13 +320,13 @@ export const EditPoem = () => {
           {/* Loading overlay for when we're updating but already have stanzas loaded */}
           {isLoading && stanzas.length > 0 && (
             <div className="absolute inset-0 bg-gray-800 opacity-50 z-10 flex justify-center items-center">
-              <div className="animate-spin opacity-100 rounded-full h-32 w-32 z-11 border-t-3 border-b-3 border-cyan-500"></div>
+              <div className="animate-spin opacity-100 rounded-full h-12 w-12 z-11 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
           )}
           
           {isLoading && stanzas.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-cyan-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
           ) : (
             <>
