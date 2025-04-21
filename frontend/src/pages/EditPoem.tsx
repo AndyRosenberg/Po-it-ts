@@ -317,125 +317,133 @@ export const EditPoem = () => {
         
         {/* Content */}
         <div className="flex-1 overflow-y-auto relative min-h-[50vh] mb-24">
-          {/* Loading overlay for when we're updating */}
-          {isLoading && (
+          {/* Loading overlay for when we're updating but already have stanzas loaded */}
+          {isLoading && stanzas.length > 0 && (
             <div className="absolute inset-0 bg-gray-800 opacity-50 z-10 flex justify-center items-center">
               <div className="animate-spin opacity-100 rounded-full h-32 w-32 z-11 border-t-3 border-b-3 border-cyan-500"></div>
             </div>
           )}
-
-          {/* Poem title */}
-          <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700 shadow-lg">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-medium text-white">Poem Title</h3>
-              <button 
-                onClick={() => setEditingTitle(!editingTitle)}
-                className="p-1 text-slate-400 hover:text-cyan-400 transition-colors"
-                disabled={isLoading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685-.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
-                </svg>
-              </button>
+          
+          {isLoading && stanzas.length === 0 ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
-            
-            {editingTitle ? (
-              <div>
-                <input
-                  type="text"
-                  className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  value={titleText}
-                  onChange={(e) => setTitleText(e.target.value)}
-                  placeholder="Enter poem title..."
+          ) : (
+            <>
+              {/* Poem title */}
+              <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700 shadow-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-medium text-white">Poem Title</h3>
+                  <button 
+                    onClick={() => setEditingTitle(!editingTitle)}
+                    className="p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+                    disabled={isLoading}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685-.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {editingTitle ? (
+                  <div>
+                    <input
+                      type="text"
+                      className="w-full p-2 bg-slate-700 text-white border border-slate-600 rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      value={titleText}
+                      onChange={(e) => setTitleText(e.target.value)}
+                      placeholder="Enter poem title..."
+                      disabled={isLoading}
+                    />
+                    <div className="flex justify-end mt-3 space-x-2">
+                      <button 
+                        onClick={() => {
+                          setEditingTitle(false);
+                          setTitleText(poemTitle); // Reset to current title
+                        }}
+                        className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleTitleUpdate}
+                        className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xl text-slate-200 font-medium">
+                    {titleText || poemTitle || "Loading title..."}
+                  </div>
+                )}
+              </div>
+              
+              {/* Stanzas list */}
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={stanzas.map(s => s.id || `temp-${s.body}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="mb-8">
+                    {stanzas.map((stanza) => (
+                      <SortableStanzaCard
+                        key={stanza.id}
+                        id={stanza.id!}
+                        body={stanza.body}
+                        onUpdate={updateStanza}
+                        onDelete={deleteStanza}
+                        disabled={isLoading}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+              
+              {/* Add new stanza */}
+              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 shadow-lg">
+                <h3 className="text-lg font-medium text-white mb-3">Add a new stanza</h3>
+                <textarea
+                  className={`w-full p-3 bg-slate-700 text-white disabled:opacity-50 disabled:cursor-not-allowed border ${newStanzaText.length > MAX_STANZA_CHARS ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]`}
+                  placeholder="Write your stanza here..."
+                  value={newStanzaText}
+                  onChange={(e) => {
+                    const newText = e.target.value;
+                    if (newText.length <= MAX_STANZA_CHARS) {
+                      setNewStanzaText(newText);
+                    }
+                  }}
+                  maxLength={MAX_STANZA_CHARS}
                   disabled={isLoading}
                 />
-                <div className="flex justify-end mt-3 space-x-2">
+                <div className={`text-sm mt-2 ${
+                  MAX_STANZA_CHARS - newStanzaText.length <= 30 
+                    ? MAX_STANZA_CHARS - newStanzaText.length <= 10 
+                      ? 'text-red-400' 
+                      : 'text-yellow-400' 
+                    : 'text-slate-400'
+                }`}>
+                  {MAX_STANZA_CHARS - newStanzaText.length} characters remaining
+                </div>
+                <div className="flex justify-end mt-4">
                   <button 
-                    onClick={() => {
-                      setEditingTitle(false);
-                      setTitleText(poemTitle); // Reset to current title
-                    }}
-                    className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
+                    onClick={handleAddStanza}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading || !newStanzaText.trim() || newStanzaText.length > MAX_STANZA_CHARS}
                   >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={handleTitleUpdate}
-                    className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
-                  >
-                    Save
+                    {isLoading ? 'Adding...' : 'Add Stanza'}
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="text-xl text-slate-200 font-medium">
-                {titleText || poemTitle || "Loading title..."}
-              </div>
-            )}
-          </div>
-          
-          {/* Stanzas list */}
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={stanzas.map(s => s.id || `temp-${s.body}`)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="mb-8">
-                {stanzas.map((stanza) => (
-                  <SortableStanzaCard
-                    key={stanza.id}
-                    id={stanza.id!}
-                    body={stanza.body}
-                    onUpdate={updateStanza}
-                    onDelete={deleteStanza}
-                    disabled={isLoading}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-          
-          {/* Add new stanza */}
-          <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 shadow-lg">
-            <h3 className="text-lg font-medium text-white mb-3">Add a new stanza</h3>
-            <textarea
-              className={`w-full p-3 bg-slate-700 text-white disabled:opacity-50 disabled:cursor-not-allowed border ${newStanzaText.length > MAX_STANZA_CHARS ? 'border-red-500' : 'border-slate-600'} rounded-md focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[120px]`}
-              placeholder="Write your stanza here..."
-              value={newStanzaText}
-              onChange={(e) => {
-                const newText = e.target.value;
-                if (newText.length <= MAX_STANZA_CHARS) {
-                  setNewStanzaText(newText);
-                }
-              }}
-              maxLength={MAX_STANZA_CHARS}
-              disabled={isLoading}
-            />
-            <div className={`text-sm mt-2 ${
-              MAX_STANZA_CHARS - newStanzaText.length <= 30 
-                ? MAX_STANZA_CHARS - newStanzaText.length <= 10 
-                  ? 'text-red-400' 
-                  : 'text-yellow-400' 
-                : 'text-slate-400'
-            }`}>
-              {MAX_STANZA_CHARS - newStanzaText.length} characters remaining
-            </div>
-            <div className="flex justify-end mt-4">
-              <button 
-                onClick={handleAddStanza}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading || !newStanzaText.trim() || newStanzaText.length > MAX_STANZA_CHARS}
-              >
-                {isLoading ? 'Adding...' : 'Add Stanza'}
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>
