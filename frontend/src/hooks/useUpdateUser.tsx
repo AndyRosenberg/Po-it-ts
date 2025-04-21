@@ -16,10 +16,10 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   const { mutate: updateUser, isPending: isLoading } = useMutation({
-    mutationFn: async (userData: UpdateUserData) => {
+    mutationFn: async(userData: UpdateUserData) => {
       setError(null);
       setSuccess(null);
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/users/update`, {
         method: 'PUT',
         headers: {

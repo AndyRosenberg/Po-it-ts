@@ -14,5 +14,5 @@ export const useAuthRedirect = (authedRoute?: string) => {
         navigate(authedRoute);
       }
     }
-  }, [isLoading, authUser?.id])
+  }, [isLoading, authUser?.id, authUser, authedRoute, navigate])
 }

@@ -10,19 +10,19 @@ export interface User {
 export const useFollowers = (userId?: string) => {
   return useQuery({
     queryKey: ['followers', userId],
-    queryFn: async () => {
+    queryFn: async() => {
       if (!userId) return [];
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/followers/${userId}`, {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch followers');
       }
-      
+
       return await response.json() as User[];
     },
     enabled: !!userId
@@ -33,19 +33,19 @@ export const useFollowers = (userId?: string) => {
 export const useFollowing = (userId?: string) => {
   return useQuery({
     queryKey: ['following', userId],
-    queryFn: async () => {
+    queryFn: async() => {
       if (!userId) return [];
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/following/${userId}`, {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch following');
       }
-      
+
       return await response.json() as User[];
     },
     enabled: !!userId
@@ -56,19 +56,19 @@ export const useFollowing = (userId?: string) => {
 export const useCheckFollowing = (userId: string | undefined) => {
   return useQuery({
     queryKey: ['checkFollowing', userId],
-    queryFn: async () => {
+    queryFn: async() => {
       if (!userId) return false;
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/check/${userId}`, {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to check following status');
       }
-      
+
       const data = await response.json();
       return data.isFollowing;
     },
@@ -82,17 +82,17 @@ export const useFollowActions = () => {
 
   // Follow a user
   const followMutation = useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async(userId: string) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
         method: 'POST',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to follow user');
       }
-      
+
       return await response.json();
     },
     onSuccess: (_, userId) => {
@@ -105,17 +105,17 @@ export const useFollowActions = () => {
 
   // Unfollow a user
   const unfollowMutation = useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async(userId: string) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to unfollow user');
       }
-      
+
       return await response.json();
     },
     onSuccess: (_, userId) => {

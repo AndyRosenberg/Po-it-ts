@@ -20,7 +20,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const location = useLocation();
   const [previousPath, setPreviousPath] = useState<string>('/');
   const [currentPath, setCurrentPath] = useState<string>('/');
-  
+
   useEffect(() => {
     // If we're navigating to a create/edit page, don't update the previous path
     if (!isCreateOrEditPage(location.pathname)) {
@@ -29,11 +29,11 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setPreviousPath(currentPath);
       }
     }
-    
+
     // Always update current path
     setCurrentPath(location.pathname);
   }, [location.pathname, currentPath]);
-  
+
   return (
     <NavigationContext.Provider value={{ previousPath, currentPath }}>
       {children}
@@ -41,4 +41,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
+// Create a separate file for this hook to fix the fast refresh warning
+// This stays here for compatibility, but causes a warning
 export const useNavigation = () => useContext(NavigationContext);

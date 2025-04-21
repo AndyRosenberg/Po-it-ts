@@ -25,25 +25,25 @@ export const ViewPoem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { deletePoem, isLoading: isDeleting, error: deleteError } = useDeletePoem();
-  
+
   // Comment drawer state
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
   const [selectedStanzaId, setSelectedStanzaId] = useState<string | null>(null);
   const [selectedStanzaText, setSelectedStanzaText] = useState('');
   const [stanzasWithComments, setStanzasWithComments] = useState<Record<string, boolean>>({});
-  
+
   // Share modal state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Function to check for comments in stanzas
-  const checkStanzaComments = useCallback(async (stanzas: any[]) => {
+  const checkStanzaComments = useCallback(async(stanzas: {id: string}[]) => {
     if (!stanzas || stanzas.length === 0) return;
 
     const commentsCheck: Record<string, boolean> = {};
-    
+
     try {
       // Create an array of promises for fetching comment status for each stanza
-      const commentPromises = stanzas.map(async (stanza) => {
+      const commentPromises = stanzas.map(async(stanza) => {
         try {
           const commentResponse = await fetch(
             // Limit to 1 since we only need to know if any comments exist
@@ -53,7 +53,7 @@ export const ViewPoem = () => {
               credentials: 'include',
             }
           );
-          
+
           if (commentResponse.ok) {
             // Handle the new pagination response format
             const responseData = await commentResponse.json();
@@ -65,7 +65,7 @@ export const ViewPoem = () => {
           commentsCheck[stanza.id] = false;
         }
       });
-      
+
       // Wait for all comment checks to complete
       await Promise.all(commentPromises);
       setStanzasWithComments(commentsCheck);
@@ -75,42 +75,46 @@ export const ViewPoem = () => {
   }, []);
 
   useEffect(() => {
-    const fetchPoem = async () => {
+    const fetchPoem = async() => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
           method: 'GET',
           credentials: 'include',
         });
-        
+
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || 'Failed to fetch poem');
         }
-        
+
         const data = await response.json();
         setPoem(data);
-        
+
         // Store draft status in sessionStorage for the BackButton to use
         if (data.isDraft) {
           sessionStorage.setItem('viewingDraft', 'true');
         } else {
           sessionStorage.removeItem('viewingDraft');
         }
-        
+
         // Check stanza comments immediately after fetching the poem
         if (data && data.stanzas && data.stanzas.length > 0) {
           await checkStanzaComments(data.stanzas);
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     if (poemId) {
       fetchPoem();
     }
@@ -119,21 +123,21 @@ export const ViewPoem = () => {
   // Refresh comments after comment drawer closes (to update UI if new comments were added)
   const handleCloseCommentsDrawer = useCallback(() => {
     setIsCommentDrawerOpen(false);
-    
+
     // Re-check for comments when the drawer closes (in case comments were added/removed)
     if (poem?.stanzas) {
       checkStanzaComments(poem.stanzas);
     }
   }, [poem?.stanzas, checkStanzaComments]);
 
-  const formattedDate = poem?.updatedAt 
+  const formattedDate = poem?.updatedAt
     ? new Date(poem.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
     : '';
-    
+
   // Handler for opening comment drawer
   const handleOpenCommentsDrawer = (stanzaId: string, stanzaText: string) => {
     setSelectedStanzaId(stanzaId);
@@ -158,14 +162,14 @@ export const ViewPoem = () => {
           stanzaText={selectedStanzaText}
         />
       )}
-      
+
       {/* Share Modal */}
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         url={generateShareUrl()}
       />
-      
+
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
         <header className="py-6 mb-8">
@@ -174,18 +178,18 @@ export const ViewPoem = () => {
               <BackButton preserveDraftState={true} />
               <h1 className="text-2xl font-bold text-white">Poem</h1>
             </div>
-            
+
             <UserAvatar />
           </div>
         </header>
-        
+
         {/* Error display */}
         {(error || deleteError) && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
             {error || deleteError}
           </div>
         )}
-        
+
         {/* Content */}
         <div className="flex-1">
           {isLoading ? (
@@ -196,20 +200,20 @@ export const ViewPoem = () => {
             <div className="bg-slate-800 rounded-xl p-5 shadow-xl border border-slate-700 mb-24">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-2xl font-semibold text-white">{poem.title}</h2>
-                
+
                 {poem.isDraft && (
                   <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-200">
                     Draft
                   </span>
                 )}
               </div>
-              
+
               <div className="mb-5 flex justify-between items-center">
                 <div className="text-sm text-slate-400">
                   {formattedDate}
                 </div>
                 {poem.user && (
-                  <Link 
+                  <Link
                     to={`/profile/${poem.user.id}`}
                     className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
@@ -217,11 +221,11 @@ export const ViewPoem = () => {
                   </Link>
                 )}
               </div>
-              
+
               <div className="space-y-7">
                 {poem.stanzas.map((stanza) => (
-                  <div 
-                    key={stanza.id} 
+                  <div
+                    key={stanza.id}
                     onClick={() => handleOpenCommentsDrawer(stanza.id, stanza.body)}
                     className={`leading-relaxed whitespace-pre-wrap text-slate-200 py-2 px-3 rounded-lg 
                       hover:bg-slate-700/30 transition-colors cursor-pointer relative
@@ -231,21 +235,21 @@ export const ViewPoem = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-9 pt-5 border-t border-slate-700 flex justify-between items-center">
-                <BackButton 
-                  preserveDraftState={true} 
+                <BackButton
+                  preserveDraftState={true}
                   className="text-slate-400 hover:text-white transition-colors"
                 >
                   Back
                 </BackButton>
-                
+
                 <div className="flex space-x-3">
                   {/* Only show owner buttons if user is the owner */}
                   {poem.isOwner && (
                     <>
                       {/* Edit button */}
-                      <button 
+                      <button
                         onClick={() => navigate(`/poems/${poemId}/edit`, { state: { isDraft: poem.isDraft } })}
                         className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
                         aria-label="Edit poem"
@@ -255,9 +259,9 @@ export const ViewPoem = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 0 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                         </svg>
                       </button>
-                      
+
                       {/* Delete button */}
-                      <button 
+                      <button
                         onClick={() => {
                           if (window.confirm('Are you sure you want to delete this poem? This action cannot be undone.')) {
                             deletePoem(poemId as string);
@@ -273,10 +277,10 @@ export const ViewPoem = () => {
                       </button>
                     </>
                   )}
-                  
+
                   {/* Share button */}
-                  <button 
-                    onClick={() => setIsShareModalOpen(true)} 
+                  <button
+                    onClick={() => setIsShareModalOpen(true)}
                     className="p-2 text-slate-400 hover:text-cyan-400 transition-colors rounded-full hover:bg-slate-700"
                     aria-label="Share poem"
                   >

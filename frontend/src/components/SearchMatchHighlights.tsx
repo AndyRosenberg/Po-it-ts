@@ -6,11 +6,11 @@ interface SearchMatchHighlightsProps {
   searchQuery: string;
 }
 
-export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({ 
-  searchMatches, 
-  searchQuery 
+export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
+  searchMatches,
+  searchQuery
 }) => {
-  if (!searchMatches || !searchQuery.trim() || 
+  if (!searchMatches || !searchQuery.trim() ||
       (searchMatches.matchingStanzas.length === 0 && !searchMatches.titleMatch && !searchMatches.usernameMatch)) {
     return null;
   }
@@ -21,11 +21,11 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
   // Format a snippet with highlighted text
   const formatSnippet = (snippet: string, matchIndex: number) => {
     if (matchIndex < 0) return <span>{snippet}</span>;
-    
+
     const beforeMatch = snippet.substring(0, matchIndex);
     const match = snippet.substring(matchIndex, matchIndex + searchTermLength);
     const afterMatch = snippet.substring(matchIndex + searchTermLength);
-    
+
     return (
       <>
         <span>{beforeMatch}</span>
@@ -44,14 +44,14 @@ export const SearchMatchHighlights: React.FC<SearchMatchHighlightsProps> = ({
             <span className="text-cyan-400 font-medium">Title match</span>
           </div>
         )}
-        
+
         {/* Username matches */}
         {searchMatches.usernameMatch && (
           <div>
             <span className="text-cyan-400 font-medium">Author match</span>
           </div>
         )}
-        
+
         {/* Show stanza matches */}
         {searchMatches.matchingStanzas.map((stanza) => (
           <div key={stanza.id} className="line-clamp-2">

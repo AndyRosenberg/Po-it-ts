@@ -18,18 +18,18 @@ interface User {
 export const useUserProfile = (userId: string | undefined) => {
   return useQuery({
     queryKey: ['user', userId],
-    queryFn: async () => {
+    queryFn: async() => {
       if (!userId) return null;
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/users/${userId}`, {
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch user');
       }
-      
+
       return await response.json() as User;
     },
     enabled: !!userId
@@ -48,9 +48,9 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
     refetch
   } = useInfiniteQuery({
     queryKey: ['userPoems', userId, pageSize, searchQuery, draftsOnly],
-    queryFn: async ({ pageParam = '' }) => {
+    queryFn: async({ pageParam = '' }) => {
       if (!userId) return { poems: [], nextCursor: null, totalCount: 0 };
-      
+
       const url = new URL(`${process.env.HOST_DOMAIN}/api/poems/user/${userId}`);
       url.searchParams.append('limit', pageSize.toString());
       url.searchParams.append('draftsOnly', draftsOnly.toString());
@@ -60,18 +60,18 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
       if (searchQuery) {
         url.searchParams.append('search', searchQuery);
       }
-      
+
       // Fetch poems using constructed URL
 
       const response = await fetch(url, {
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch user poems');
       }
-      
+
       return await response.json();
     },
     getNextPageParam: (lastPage) => {
@@ -83,14 +83,14 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
 
   // Flatten the pages into a single list of poems
   const poems = data?.pages.flatMap(page => page.poems) || [];
-  
+
   // Count the number of pages that have been loaded
   const pagesCount = data?.pages.length || 0;
-  
-  return { 
-    poems, 
-    isLoading, 
-    error, 
+
+  return {
+    poems,
+    isLoading,
+    error,
     refetch,
     fetchNextPage,
     hasNextPage,

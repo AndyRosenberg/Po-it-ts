@@ -25,7 +25,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
   const { data: authUser, isLoading } = useQuery({
     queryKey: ["auth-user"],
-    queryFn: async () => {
+    queryFn: async() => {
       try {
         const meResponse = await fetch(`${process.env.HOST_DOMAIN}/api/auth/me`, {
           method: 'GET',
@@ -38,8 +38,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         }
 
         return data;
-      } catch (error: any) {
-        console.error(error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(error.message);
+        } else {
+          console.error('An unknown error occurred');
+        }
         return null;
       }
     },

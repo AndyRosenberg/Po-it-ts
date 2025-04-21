@@ -5,18 +5,18 @@ import { useLocation } from 'react-router-dom';
 export const useNavigationHistory = () => {
   const location = useLocation();
   const previousPathRef = useRef<string>('/');
-  
+
   useEffect(() => {
     // Don't update for create/edit pages
-    const isCreateOrEdit = 
-      location.pathname.includes('/create') || 
+    const isCreateOrEdit =
+      location.pathname.includes('/create') ||
       (location.pathname.includes('/poems/') && location.pathname.includes('/edit'));
-    
+
     if (!isCreateOrEdit) {
       // Store current path as previous for the next navigation
       previousPathRef.current = location.pathname;
     }
-    
+
   }, [location.pathname]);
 
   return {

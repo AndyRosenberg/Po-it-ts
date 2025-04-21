@@ -9,11 +9,11 @@ interface FollowButtonProps {
 const FollowButton = ({ userId, size = 'md' }: FollowButtonProps) => {
   const { authUser } = useAuthContext();
   const { data: isFollowing, isLoading: isCheckLoading } = useCheckFollowing(userId);
-  const { 
-    followUser, 
-    unfollowUser, 
-    isFollowLoading, 
-    isUnfollowLoading 
+  const {
+    followUser,
+    unfollowUser,
+    isFollowLoading,
+    isUnfollowLoading
   } = useFollowActions();
 
   // Don't show button if viewing own profile
@@ -41,8 +41,8 @@ const FollowButton = ({ userId, size = 'md' }: FollowButtonProps) => {
   return (
     <button
       className={`${sizeClasses[size]} rounded-md ${
-        isFollowing 
-          ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' 
+        isFollowing
+          ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
           : 'bg-cyan-600 hover:bg-cyan-500 text-white'
       } transition-colors ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
       onClick={handleFollowAction}

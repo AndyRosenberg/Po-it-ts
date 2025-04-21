@@ -14,7 +14,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(url);
     setCopied(true);
-    
+
     // Reset copied state after 2 seconds
     setTimeout(() => {
       setCopied(false);
@@ -24,16 +24,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/70" 
+      <div
+        className="absolute inset-0 bg-black/70"
         onClick={onClose}
       ></div>
-      
+
       {/* Modal content */}
       <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 w-full max-w-md z-10">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-white">Share Poem</h3>
-          <button 
+          <button
             onClick={onClose}
             className="text-slate-400 hover:text-white"
           >
@@ -42,7 +42,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) 
             </svg>
           </button>
         </div>
-        
+
         <div className="mt-4">
           <div className="flex items-center">
             <input
@@ -62,7 +62,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) 
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          
+
           <div className="mt-6 flex justify-end">
             <button
               onClick={onClose}

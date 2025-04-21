@@ -7,7 +7,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   const { mutate: logout, isPending: isLoading, error } = useMutation({
-    mutationFn: async () => {
+    mutationFn: async() => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
         method: "POST",
         credentials: 'include'

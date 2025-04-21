@@ -17,10 +17,10 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState<'poems' | 'drafts' | 'followers' | 'following'>('poems');
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-   // Get current user to check if viewing own profile
-   const { authUser: currentUser, isLoading: authLoading } = useAuthContext();
-   const [isOwnProfile, setIsOwnProfile] = useState(false);
-  
+  // Get current user to check if viewing own profile
+  const { authUser: currentUser, isLoading: authLoading } = useAuthContext();
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+
   // Set up search debounce
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -35,9 +35,9 @@ const UserProfile = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const tabParam = queryParams.get('tab');
-    
+
     // Process URL parameters
-    
+
     // For 'drafts' tab, only activate if it's the user's own profile
     if (tabParam === 'drafts') {
       if (isOwnProfile) {
@@ -51,7 +51,7 @@ const UserProfile = () => {
       setActiveTab(tabParam);
     } else {
       const forceDraftsTab = localStorage.getItem('forceDraftsTab') === 'true';
-      
+
       if (forceDraftsTab && isOwnProfile) {
         setActiveTab('drafts');
         navigate(`/profile/${userId}?tab=drafts`, { replace: true });
@@ -61,46 +61,46 @@ const UserProfile = () => {
       }
     }
   }, [location.search, userId, isOwnProfile, navigate]);
-  
+
   // Determine if this is the user's own profile
   useEffect(() => {
     if (!authLoading && currentUser && userId) {
       const isOwn = currentUser.id === userId;
       setIsOwnProfile(isOwn);
-      
+
       // Set isOwnProfile state
     }
   }, [currentUser, userId, authLoading]);
 
   // Custom hooks for data fetching
   const { data: user, isLoading: userLoading } = useUserProfile(userId);
-  const { 
-    poems, 
+  const {
+    poems,
     isLoading: poemsLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useUserPoems(userId, 12, debouncedSearchQuery, false); // false = not drafts
-  
+
   // Fetch drafts (only for own profile)
-  const { 
+  const {
     poems: drafts,
     isLoading: draftsLoading,
     isFetchingNextPage: isFetchingNextDraftPage,
     fetchNextPage: fetchNextDraftPage,
     hasNextPage: hasNextDraftPage,
   } = useUserPoems(userId, 12, debouncedSearchQuery, true); // true = drafts only
-  
+
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
-  
-  // Set up infinite scrolling 
+
+  // Set up infinite scrolling
   const poemsObserverTarget = useRef(null);
   const draftsObserverTarget = useRef(null);
 
   // Observer for regular poems
   const handlePoemsObserver = useCallback(
-    (entries: any) => {
+    (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !poemsLoading) {
         // Fetch next page of poems
@@ -112,7 +112,7 @@ const UserProfile = () => {
 
   // Observer for drafts
   const handleDraftsObserver = useCallback(
-    (entries: any) => {
+    (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextDraftPage && !isFetchingNextDraftPage && !draftsLoading) {
         // Fetch next page of drafts
@@ -131,10 +131,10 @@ const UserProfile = () => {
       rootMargin: '0px',
       threshold: 0.1,
     });
-    
+
     const currentTarget = poemsObserverTarget.current;
     if (currentTarget) observer.observe(currentTarget);
-    
+
     return () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
@@ -149,10 +149,10 @@ const UserProfile = () => {
       rootMargin: '0px',
       threshold: 0.1,
     });
-    
+
     const currentTarget = draftsObserverTarget.current;
     if (currentTarget) observer.observe(currentTarget);
-    
+
     return () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
@@ -197,7 +197,7 @@ const UserProfile = () => {
             </div>
           </div>
         </header>
-        
+
         {/* Profile header */}
         <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 mb-6">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -207,23 +207,23 @@ const UserProfile = () => {
                 {userInitials}
               </div>
             </div>
-            
+
             {/* User info */}
             <div className="flex-1 flex flex-col items-center md:items-start">
               <div className="flex justify-between items-center w-full">
                 <h2 className="text-2xl font-bold text-white mb-2">{user.username}</h2>
                 <FollowButton userId={userId || ''} />
               </div>
-              
+
               <div className="flex text-slate-300 space-x-6 mb-4">
-                <button 
+                <button
                   onClick={() => setActiveTab('followers')}
                   className="flex flex-col items-center md:items-start hover:text-cyan-400 transition-colors"
                 >
                   <span className="font-semibold">{followers?.length || 0}</span>
                   <span className="text-sm text-slate-400">followers</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('following')}
                   className="flex flex-col items-center md:items-start hover:text-cyan-400 transition-colors"
                 >
@@ -235,14 +235,14 @@ const UserProfile = () => {
                   <span className="text-sm text-slate-400">poems</span>
                 </div>
               </div>
-              
+
               <div className="text-sm text-slate-400">
                 Joined {formattedDate}
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Tabs */}
         <div className="bg-slate-800 rounded-xl shadow-xl border border-slate-700">
           <div className="border-b border-slate-700">
@@ -303,7 +303,7 @@ const UserProfile = () => {
               </button>
             </nav>
           </div>
-          
+
           {/* Tab content */}
           <div className="p-6">
             {/* Poems tab */}
@@ -324,7 +324,7 @@ const UserProfile = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                
+
                 {poemsLoading && !isFetchingNextPage ? (
                   <div className="flex justify-center my-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
@@ -337,8 +337,8 @@ const UserProfile = () => {
                   <>
                     <div className="space-y-4">
                       {poems?.map((poem: Poem) => (
-                        <div 
-                          key={poem.id} 
+                        <div
+                          key={poem.id}
                           onClick={() => navigate(`/poems/${poem.id}`)}
                           className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
                         >
@@ -349,10 +349,10 @@ const UserProfile = () => {
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* Loading indicator at the bottom for infinite scroll */}
-                    <div 
-                      ref={poemsObserverTarget} 
+                    <div
+                      ref={poemsObserverTarget}
                       className="py-8 flex justify-center"
                     >
                       {isFetchingNextPage && (
@@ -366,7 +366,7 @@ const UserProfile = () => {
                 )}
               </div>
             )}
-            
+
             {/* Drafts tab - only visible on user's own profile */}
             {activeTab === 'drafts' && isOwnProfile && (
               <div>
@@ -385,7 +385,7 @@ const UserProfile = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                
+
                 {draftsLoading && !isFetchingNextDraftPage ? (
                   <div className="flex justify-center my-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
@@ -398,8 +398,8 @@ const UserProfile = () => {
                   <>
                     <div className="space-y-4">
                       {drafts?.map((poem: Poem) => (
-                        <div 
-                          key={poem.id} 
+                        <div
+                          key={poem.id}
                           onClick={() => navigate(`/poems/${poem.id}`)}
                           className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
                         >
@@ -413,9 +413,9 @@ const UserProfile = () => {
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* Loading indicator at the bottom for infinite scroll */}
-                    <div 
+                    <div
                       ref={draftsObserverTarget}
                       className="py-8 flex justify-center"
                     >
@@ -430,7 +430,7 @@ const UserProfile = () => {
                 )}
               </div>
             )}
-            
+
             {/* Followers tab */}
             {activeTab === 'followers' && (
               <div>
@@ -446,8 +446,8 @@ const UserProfile = () => {
                   <div className="space-y-3">
                     {followers?.map(follower => (
                       <div key={follower.id} className="flex justify-between items-center p-3 border-b border-slate-700">
-                        <Link 
-                          to={`/profile/${follower.id}`} 
+                        <Link
+                          to={`/profile/${follower.id}`}
                           className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors"
                         >
                           <div className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-700 text-white text-sm">
@@ -462,7 +462,7 @@ const UserProfile = () => {
                 )}
               </div>
             )}
-            
+
             {/* Following tab */}
             {activeTab === 'following' && (
               <div>
@@ -478,8 +478,8 @@ const UserProfile = () => {
                   <div className="space-y-3">
                     {following?.map(followed => (
                       <div key={followed.id} className="flex justify-between items-center p-3 border-b border-slate-700">
-                        <Link 
-                          to={`/profile/${followed.id}`} 
+                        <Link
+                          to={`/profile/${followed.id}`}
                           className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors"
                         >
                           <div className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-slate-700 text-white text-sm">

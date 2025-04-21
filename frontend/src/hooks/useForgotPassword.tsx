@@ -7,7 +7,7 @@ export type ForgotPasswordInput = {
 
 export const useForgotPassword = () => {
   const { mutate: forgotPassword, isPending: loading, isSuccess } = useMutation({
-    mutationFn: async (inputs: ForgotPasswordInput) => {
+    mutationFn: async(inputs: ForgotPasswordInput) => {
       const response = await fetch(
         `${process.env.HOST_DOMAIN}/api/auth/forgot-password`,
         {

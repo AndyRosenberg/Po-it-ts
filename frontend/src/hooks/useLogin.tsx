@@ -11,7 +11,7 @@ export const useLogin = () => {
   const { setAuthUser } = useAuthContext();
 
   const { mutate: login, isPending: loading } = useMutation({
-    mutationFn: async (inputs: LoginInputs) => {
+    mutationFn: async(inputs: LoginInputs) => {
       const response = await fetch(
         `${process.env.HOST_DOMAIN}/api/auth/login`,
         {

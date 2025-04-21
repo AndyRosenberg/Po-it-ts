@@ -59,7 +59,7 @@ export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['my-poems', pageSize, searchQuery],
-    queryFn: async ({ pageParam = '' }) => {
+    queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/my-poems`);
       url.searchParams.append('limit', pageSize.toString());
       if (pageParam) {
@@ -73,12 +73,12 @@ export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch poems');
       }
-      
+
       return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
@@ -89,14 +89,14 @@ export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
 
   // Flatten the pages into a single list of poems
   const poems = data?.pages.flatMap(page => page.poems) || [];
-  
+
   // Count the number of pages that have been loaded
   const pagesCount = data?.pages.length || 0;
-  
-  return { 
-    poems, 
-    isLoading, 
-    error, 
+
+  return {
+    poems,
+    isLoading,
+    error,
     refetch,
     fetchNextPage,
     hasNextPage,
@@ -117,7 +117,7 @@ export const useFeedPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['feed', pageSize, searchQuery],
-    queryFn: async ({ pageParam = '' }) => {
+    queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/feed`);
       url.searchParams.append('limit', pageSize.toString());
       if (pageParam) {
@@ -131,12 +131,12 @@ export const useFeedPoems = (pageSize = 10, searchQuery?: string) => {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch poems');
       }
-      
+
       return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
@@ -147,14 +147,14 @@ export const useFeedPoems = (pageSize = 10, searchQuery?: string) => {
 
   // Flatten the pages into a single list of poems
   const poems = data?.pages.flatMap(page => page.poems) || [];
-  
+
   // Count the number of pages that have been loaded
   const pagesCount = data?.pages.length || 0;
-  
-  return { 
-    poems, 
-    isLoading, 
-    error, 
+
+  return {
+    poems,
+    isLoading,
+    error,
     refetch,
     fetchNextPage,
     hasNextPage,
@@ -175,7 +175,7 @@ export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['public-poems', pageSize, searchQuery],
-    queryFn: async ({ pageParam = '' }) => {
+    queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/poems`);
       url.searchParams.append('limit', pageSize.toString());
       if (pageParam) {
@@ -189,12 +189,12 @@ export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch poems');
       }
-      
+
       return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
@@ -205,14 +205,14 @@ export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
 
   // Flatten the pages into a single list of poems
   const poems = data?.pages.flatMap(page => page.poems) || [];
-  
+
   // Count the number of pages that have been loaded
   const pagesCount = data?.pages.length || 0;
-  
-  return { 
-    poems, 
-    isLoading, 
-    error, 
+
+  return {
+    poems,
+    isLoading,
+    error,
     refetch,
     fetchNextPage,
     hasNextPage,

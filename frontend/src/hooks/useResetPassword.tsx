@@ -9,7 +9,7 @@ export type ResetPasswordInput = {
 
 export const useResetPassword = () => {
   const { mutate: resetPassword, isPending: loading, isSuccess } = useMutation({
-    mutationFn: async (inputs: ResetPasswordInput) => {
+    mutationFn: async(inputs: ResetPasswordInput) => {
       const response = await fetch(
         `${process.env.HOST_DOMAIN}/api/auth/reset-password`,
         {

@@ -10,7 +10,7 @@ function App() {
         <div className="absolute top-1/4 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full"></div>
         <div className="absolute bottom-1/4 -right-40 w-80 h-80 bg-orange-500/10 rounded-full"></div>
       </div>
-      
+
       {/* Decorative static elements - removed animations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-10 left-[10%] w-2 h-2 bg-cyan-400/30 rounded-full"></div>
@@ -18,14 +18,14 @@ function App() {
         <div className="absolute bottom-[30%] left-[30%] w-1.5 h-1.5 bg-orange-400/30 rounded-full"></div>
         <div className="absolute bottom-[15%] right-[25%] w-2.5 h-2.5 bg-orange-400/20 rounded-full"></div>
       </div>
-      
+
       {/* Main content */}
       <div className="relative w-full h-full overflow-auto">
         <div className="w-full h-full flex justify-center">
           <AppRoutes />
         </div>
-        
-        <Toaster 
+
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,

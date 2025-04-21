@@ -23,7 +23,7 @@ export const Header = ({ label, navLinkPath = '/explore', navLinkLabel = 'Explor
             </span>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {navLinkPath?.length && (
             <Link to={navLinkPath} className="text-slate-300 hover:text-white transition-colors">

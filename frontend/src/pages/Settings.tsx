@@ -10,7 +10,7 @@ export const Settings = () => {
   const { authUser } = useAuthContext();
   const { updateUser, isLoading, error, success } = useUpdateUser();
   const { deleteAccount, isLoading: isDeleting, error: deleteError } = useDeleteAccount();
-  
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -37,15 +37,15 @@ export const Settings = () => {
     }
   }, [authUser]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-    
-    const userData: any = {};
-    
+
+    const userData: Record<string, unknown> = {};
+
     // Only include fields that have changed
     if (username !== authUser?.username) userData.username = username;
     if (email !== authUser?.email) userData.email = email;
-    
+
     // Handle password update if provided
     if (newPassword) {
       if (newPassword !== confirmPassword) {
@@ -59,7 +59,7 @@ export const Settings = () => {
       userData.password = newPassword;
       userData.currentPassword = currentPassword;
     }
-    
+
     // Only proceed if there are changes to update
     if (Object.keys(userData).length > 0) {
       await updateUser(userData);
@@ -70,7 +70,7 @@ export const Settings = () => {
     if (!deletePassword) {
       return;
     }
-    
+
     deleteAccount(deletePassword);
   };
 
@@ -79,23 +79,23 @@ export const Settings = () => {
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
         <Header label="Settings" />
-        
+
         {/* Content */}
         <div className="max-w-2xl mx-auto w-full">
           <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
-          
+
           {(error || deleteError) && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
               {error || deleteError}
             </div>
           )}
-          
+
           {success && (
             <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200">
               {success}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1">
@@ -111,7 +111,7 @@ export const Settings = () => {
               />
               <p className="mt-1 text-sm text-slate-500">Username must be unique.</p>
             </div>
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
                 Email
@@ -126,10 +126,10 @@ export const Settings = () => {
               />
               <p className="mt-1 text-sm text-slate-500">Email must be unique.</p>
             </div>
-            
+
             <div className="pt-4 border-t border-slate-700">
               <h2 className="text-xl font-medium mb-4">Change Password</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-300 mb-1">
@@ -143,7 +143,7 @@ export const Settings = () => {
                     className="w-full h-12 px-4 rounded-lg bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="newPassword" className="block text-sm font-medium text-slate-300 mb-1">
                     New Password
@@ -156,7 +156,7 @@ export const Settings = () => {
                     className="w-full h-12 px-4 rounded-lg bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1">
                     Confirm New Password
@@ -171,7 +171,7 @@ export const Settings = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="pt-4">
               <button
                 type="submit"
@@ -181,7 +181,7 @@ export const Settings = () => {
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
-            
+
             <div className="mt-12 pt-4 border-t border-slate-700/50">
               <button
                 type="button"
@@ -194,13 +194,13 @@ export const Settings = () => {
           </form>
         </div>
       </div>
-      
+
       {/* Delete Account Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => {
               if (!isDeleting) {
                 setShowDeleteModal(false);
@@ -208,12 +208,12 @@ export const Settings = () => {
               }
             }}
           ></div>
-          
+
           {/* Modal content */}
           <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 w-full max-w-md z-10 transform transition-all">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-white">Delete Account</h3>
-              <button 
+              <button
                 onClick={() => {
                   if (!isDeleting) {
                     setShowDeleteModal(false);
@@ -228,14 +228,14 @@ export const Settings = () => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="mt-4">
               {!showConfirmation ? (
                 <>
                   <p className="text-slate-300 mb-4">
                     This action cannot be undone. All your data will be permanently deleted.
                   </p>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label htmlFor="deletePassword" className="block text-sm font-medium text-slate-300 mb-1">
@@ -250,7 +250,7 @@ export const Settings = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 flex justify-end space-x-3">
                     <button
                       onClick={() => setShowDeleteModal(false)}
@@ -279,7 +279,7 @@ export const Settings = () => {
                     <p className="text-slate-300 mb-6">
                       This action <span className="font-bold text-red-400">cannot</span> be undone.
                     </p>
-                    
+
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={() => setShowConfirmation(false)}

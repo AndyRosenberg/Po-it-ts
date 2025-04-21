@@ -141,6 +141,7 @@ export const CommentDrawer = ({
         className={`fixed bottom-0 right-0 bg-slate-900 w-full sm:w-[400px] max-w-full h-[90vh] sm:h-[100vh] rounded-t-xl sm:rounded-l-xl shadow-lg transform transition-transform ${
           isOpen ? 'translate-y-0' : 'translate-y-full'
         } flex flex-col border border-slate-700 overflow-hidden`}
+        style={{ display: 'flex', flexDirection: 'column' }}
       >
         {/* Drawer handle for mobile */}
         <div className="h-2 w-10 mx-auto bg-slate-700 rounded mt-2 sm:hidden"></div>

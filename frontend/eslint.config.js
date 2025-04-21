@@ -23,6 +23,10 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      "no-trailing-spaces": "error",
+      "indent": ["error", 2],
+      "space-before-function-paren": ["error", "never"],
+      "keyword-spacing": ["error", { "before": true, "after": true }]
     },
   },
 )

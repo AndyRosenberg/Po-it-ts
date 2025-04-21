@@ -30,15 +30,15 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
     };
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = async() => {
     await logout();
     setIsOpen(false);
     navigate("/login");
   };
-  
+
   return (
     <div className="relative" ref={dropdownRef}>
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={`inline-flex items-center justify-center rounded-full h-10 w-10 ${
           highlight ? 'bg-cyan-800/40 hover:bg-cyan-700/60' : 'bg-slate-800/40 hover:bg-slate-700/60'
@@ -48,9 +48,9 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
       >
         <span className="text-sm font-medium">{initials}</span>
       </button>
-      
+
       {isOpen && (
-        <div 
+        <div
           className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg z-10 py-1"
           style={{ opacity: 1, transition: 'opacity 100ms ease-out' }}
         >
@@ -58,21 +58,21 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
             <p className="text-sm leading-tight font-medium text-white truncate">{user?.username}</p>
             <p className="text-xs leading-tight text-slate-400 truncate">{user?.email}</p>
           </div>
-          <Link 
-            to={`/profile/${user?.id}`} 
+          <Link
+            to={`/profile/${user?.id}`}
             className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             My Profile
           </Link>
-          <Link 
-            to="/settings" 
+          <Link
+            to="/settings"
             className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             Settings
           </Link>
-          <button 
+          <button
             onClick={handleLogout}
             className="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
           >

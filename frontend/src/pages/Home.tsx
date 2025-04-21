@@ -9,12 +9,12 @@ export const Home = () => {
   useAuthRedirect();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  
+
   // Track that we're on the feed page
   useEffect(() => {
     localStorage.setItem('lastMainPage', 'feed');
   }, []);
-  
+
   // Set up search debounce
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -25,23 +25,23 @@ export const Home = () => {
       clearTimeout(timerId);
     };
   }, [searchQuery]);
-  
+
   // Fetch feed poems
-  const { 
-    poems, 
-    isLoading, 
-    error, 
+  const {
+    poems,
+    isLoading,
+    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     pagesCount
   } = useFeedPoems(12, debouncedSearchQuery);
-  
+
   // Set up infinite scrolling
   const observerTarget = useRef(null);
 
   const handleObserver = useCallback(
-    (entries: any) => {
+    (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isLoading) {
         fetchNextPage();
@@ -59,10 +59,10 @@ export const Home = () => {
       rootMargin: '0px',
       threshold: 0.1,
     });
-    
+
     const currentTarget = observerTarget.current;
     if (currentTarget) observer.observe(currentTarget);
-    
+
     return () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
@@ -76,7 +76,7 @@ export const Home = () => {
       <div className="flex flex-col min-h-[90vh]">
         {/* Header */}
         <Header label="Feed" navLinkPath="/explore" navLinkLabel="Explore" />
-        
+
         {/* Search */}
         <div className="relative mb-8">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -92,14 +92,14 @@ export const Home = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         {/* Error display */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
             {`${error}`}
           </div>
         )}
-        
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {/* Loading state */}
@@ -119,7 +119,7 @@ export const Home = () => {
                 <h3 className="text-xl font-semibold mb-2">Your feed is empty</h3>
                 <p className="text-slate-400 mb-6 max-w-md">Your feed shows your poems and poems from poets you follow. Start by creating your own poem or discover new voices.</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link 
+                  <Link
                     to="/poems/create"
                     className="inline-flex items-center px-4 h-10 bg-gradient-to-r from-cyan-500 to-cyan-700 hover:from-cyan-600 hover:to-cyan-800 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/10 transition-all hover:shadow-cyan-500/20"
                   >
@@ -128,7 +128,7 @@ export const Home = () => {
                     </svg>
                     Create a poem
                   </Link>
-                  <Link 
+                  <Link
                     to="/explore"
                     className="inline-flex items-center px-4 h-10 border border-cyan-500/50 bg-transparent hover:bg-cyan-500/10 text-cyan-400 font-medium rounded-lg transition-all"
                   >
@@ -156,10 +156,10 @@ export const Home = () => {
                   />
                 ))
               )}
-              
+
               {/* Loading indicator at the bottom for infinite scroll */}
-              <div 
-                ref={observerTarget} 
+              <div
+                ref={observerTarget}
                 className="md:col-span-2 py-8 flex justify-center"
               >
                 {isFetchingNextPage && (
@@ -172,10 +172,10 @@ export const Home = () => {
             </div>
           )}
         </div>
-        
+
         {/* Floating action button (mobile only) */}
         <div className="fixed bottom-6 right-6">
-          <Link 
+          <Link
             to="/poems/create"
             className="h-14 w-14 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-700 text-white shadow-lg shadow-cyan-500/20 flex items-center justify-center hover:from-cyan-600 hover:to-cyan-800 transition-all hover:shadow-cyan-500/30"
           >

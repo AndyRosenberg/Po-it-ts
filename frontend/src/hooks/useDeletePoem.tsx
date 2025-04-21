@@ -10,19 +10,19 @@ export const useDeletePoem = () => {
   const queryClient = useQueryClient();
 
   const { mutate: deletePoem, isPending: isLoading, error } = useMutation({
-    mutationFn: async (poemId: string) => {
+    mutationFn: async(poemId: string) => {
       if (!poemId) throw new Error('Poem ID is required');
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to delete poem');
       }
-      
+
       return true;
     },
     onSuccess: () => {

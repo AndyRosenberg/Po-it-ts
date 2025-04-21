@@ -7,12 +7,12 @@ export const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = new URLSearchParams(location.search).get("token");
-  
+
   const [inputs, setInputs] = useState({
     password: "",
     confirmPassword: "",
   });
-  
+
   const { resetPassword, loading, isSuccess } = useResetPassword();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export const ResetPassword = () => {
       const timer = setTimeout(() => {
         navigate("/login");
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isSuccess, navigate]);
