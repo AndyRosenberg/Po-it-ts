@@ -280,7 +280,14 @@ export const CreatePoem = () => {
         )}
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto min-h-[50vh]">
+        <div className="flex-1 overflow-y-auto min-h-[50vh] mb-24">
+          {/* Loading overlay for when we're updating but already have stanzas loaded */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-gray-800 opacity-50 z-10 flex justify-center items-center">
+              <div className="animate-spin opacity-100 rounded-full h-32 w-32 z-11 border-t-3 border-b-3 border-cyan-500"></div>
+            </div>
+          )}
+
           {/* Poem title */}
           <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700 shadow-lg">
             <div className="flex justify-between items-center mb-2">
