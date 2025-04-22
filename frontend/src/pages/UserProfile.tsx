@@ -5,6 +5,7 @@ import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { getUserInitials } from '../utils/user-utils';
 import { useUserProfile, useUserPoems } from '../hooks/useUserProfile';
 import { useFollowers, useFollowing } from '../hooks/useFollows';
+import { useUserCollections } from '../hooks/useCollections';
 import FollowButton from '../components/FollowButton';
 import { Poem } from '../hooks/usePoems';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -14,7 +15,7 @@ const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'poems' | 'drafts' | 'followers' | 'following'>('poems');
+  const [activeTab, setActiveTab] = useState<'poems' | 'drafts' | 'followers' | 'following' | 'collections'>('poems');
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   // Get current user to check if viewing own profile
@@ -47,7 +48,7 @@ const UserProfile = () => {
         navigate(`/profile/${userId}`, { replace: true });
         // Redirect from drafts to poems
       }
-    } else if (tabParam === 'followers' || tabParam === 'following') {
+    } else if (tabParam === 'followers' || tabParam === 'following' || tabParam === 'collections') {
       setActiveTab(tabParam);
     } else {
       const forceDraftsTab = localStorage.getItem('forceDraftsTab') === 'true';
@@ -93,10 +94,20 @@ const UserProfile = () => {
 
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
+  
+  // Collections hook
+  const {
+    collections,
+    isLoading: collectionsLoading,
+    fetchNextPage: fetchNextCollectionPage,
+    hasNextPage: hasNextCollectionPage,
+    isFetchingNextPage: isFetchingNextCollectionPage,
+  } = useUserCollections(userId || '', 12, debouncedSearchQuery);
 
   // Set up infinite scrolling
   const poemsObserverTarget = useRef(null);
   const draftsObserverTarget = useRef(null);
+  const collectionsObserverTarget = useRef(null);
 
   // Observer for regular poems
   const handlePoemsObserver = useCallback(
@@ -120,6 +131,18 @@ const UserProfile = () => {
       }
     },
     [fetchNextDraftPage, hasNextDraftPage, isFetchingNextDraftPage, draftsLoading]
+  );
+  
+  // Observer for collections
+  const handleCollectionsObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextCollectionPage && !isFetchingNextCollectionPage && !collectionsLoading) {
+        // Fetch next page of collections
+        fetchNextCollectionPage();
+      }
+    },
+    [fetchNextCollectionPage, hasNextCollectionPage, isFetchingNextCollectionPage, collectionsLoading]
   );
 
   // Set up the observer effect for poems
@@ -157,6 +180,24 @@ const UserProfile = () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
   }, [handleDraftsObserver, activeTab]);
+  
+  // Set up the observer effect for collections
+  useEffect(() => {
+    if (activeTab !== 'collections') return;
+
+    const observer = new IntersectionObserver(handleCollectionsObserver, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+    });
+
+    const currentTarget = collectionsObserverTarget.current;
+    if (currentTarget) observer.observe(currentTarget);
+
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [handleCollectionsObserver, activeTab]);
 
   if (userLoading) {
     return (
@@ -300,6 +341,19 @@ const UserProfile = () => {
                 }`}
               >
                 Following
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('collections');
+                  navigate(`/profile/${userId}?tab=collections`);
+                }}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === 'collections'
+                    ? 'border-cyan-500 text-cyan-500'
+                    : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                Collections
               </button>
             </nav>
           </div>
@@ -491,6 +545,72 @@ const UserProfile = () => {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            )}
+            
+            {/* Collections tab */}
+            {activeTab === 'collections' && (
+              <div>
+                {/* Search bar for collections tab */}
+                <div className="relative mb-6">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search collections..."
+                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {collectionsLoading && !isFetchingNextCollectionPage ? (
+                  <div className="flex justify-center my-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                  </div>
+                ) : collections?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400">No collections yet</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      {collections?.map((collection) => (
+                        <div
+                          key={collection.id}
+                          onClick={() => navigate(`/poems/${collection.collectableId}`)}
+                          className="p-4 border border-slate-700 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer"
+                        >
+                          <div className="flex justify-between items-start">
+                            <h3 className="text-lg font-medium text-white mb-2">
+                              {collection.collectableType}
+                            </h3>
+                            <span className="px-2 py-1 text-xs rounded-md bg-cyan-500/20 text-cyan-200">Pinned</span>
+                          </div>
+                          <p className="text-sm text-slate-400">
+                            Added on {new Date(collection.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Loading indicator for infinite scroll */}
+                    <div
+                      ref={collectionsObserverTarget}
+                      className="py-8 flex justify-center"
+                    >
+                      {isFetchingNextCollectionPage && (
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                      )}
+                      {!isFetchingNextCollectionPage && hasNextCollectionPage && (
+                        <div className="text-sm text-slate-400">Scroll for more</div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}

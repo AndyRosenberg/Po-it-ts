@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Poem } from "../hooks/usePoems";
 import { SearchMatchHighlights } from "./SearchMatchHighlights";
+import PinButton from "./PinButton";
 
 interface PoemCardProps {
   poem: Poem;
@@ -65,6 +66,11 @@ export const PoemCard: React.FC<PoemCardProps> = ({
         <div className="flex items-center space-x-2 text-xs">
           <span className="text-slate-500">{poem.stanzas.length} stanza{poem.stanzas.length !== 1 ? 's' : ''}</span>
         </div>
+        <PinButton 
+          poemId={poem.id} 
+          poemUserId={poem.userId} 
+          size="sm"
+        />
       </div>
     </div>
   );

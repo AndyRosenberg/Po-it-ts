@@ -29,6 +29,7 @@ model User {
 
   poems Poem[]
   comments Comment[]
+  collections Collection[]
   
   // Self-relation for follows
   following User[] @relation("UserFollows")
@@ -88,4 +89,17 @@ model Follow {
   A String
   B String
   @@id([A, B])
+}
+
+model Collection {
+  @@map("collections")
+  id String @id @default(cuid())
+  userId String
+  collectableId String
+  collectableType String
+  user User @relation(fields: [userId], references: [id]) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([collectableId, collectableType])
 }

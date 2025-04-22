@@ -7,6 +7,7 @@ import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { CommentDrawer } from '../components/CommentDrawer';
 import { ShareModal } from '../components/ShareModal';
+import PinButton from '../components/PinButton';
 
 interface ExtendedPoem extends Poem {
   isOwner?: boolean;
@@ -201,11 +202,21 @@ export const ViewPoem = () => {
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-2xl font-semibold text-white">{poem.title}</h2>
 
-                {poem.isDraft && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-200">
-                    Draft
-                  </span>
-                )}
+                <div className="flex items-center space-x-2">
+                  {poem.isDraft && (
+                    <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-200">
+                      Draft
+                    </span>
+                  )}
+                  {!poem.isOwner && (
+                    <PinButton 
+                      poemId={poem.id} 
+                      poemUserId={poem.user?.id || ''} 
+                      size="md"
+                      showCount={true}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="mb-5 flex justify-between items-center">
@@ -278,6 +289,16 @@ export const ViewPoem = () => {
                     </>
                   )}
 
+                  {/* Pin button - show in action area if not owner */}
+                  {!poem.isOwner && (
+                    <PinButton 
+                      poemId={poem.id} 
+                      poemUserId={poem.user?.id || ''} 
+                      size="md"
+                      showCount={false}
+                    />
+                  )}
+                  
                   {/* Share button */}
                   <button
                     onClick={() => setIsShareModalOpen(true)}
