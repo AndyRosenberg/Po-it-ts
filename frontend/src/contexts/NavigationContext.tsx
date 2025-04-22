@@ -4,11 +4,13 @@ import { useLocation } from 'react-router-dom';
 interface NavigationContextType {
   previousPath: string;
   currentPath: string;
+  pathHistory: string[];
 }
 
 const NavigationContext = createContext<NavigationContextType>({
   previousPath: '/',
   currentPath: '/',
+  pathHistory: ['/']
 });
 
 // Check if a path is a create or edit page
@@ -20,22 +22,43 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const location = useLocation();
   const [previousPath, setPreviousPath] = useState<string>('/');
   const [currentPath, setCurrentPath] = useState<string>('/');
+  const [pathHistory, setPathHistory] = useState<string[]>(['/']);
 
   useEffect(() => {
-    // If we're navigating to a create/edit page, don't update the previous path
-    if (!isCreateOrEditPage(location.pathname)) {
-      // Only update previous path if we're on a non-create/edit page
-      if (location.pathname !== currentPath) {
-        setPreviousPath(currentPath);
-      }
-    }
+    // Get full path including search params
+    const fullPath = location.pathname + location.search;
+    const fullCurrentPath = currentPath;
 
-    // Always update current path
-    setCurrentPath(location.pathname);
-  }, [location.pathname, currentPath]);
+    // Only update if we're actually changing paths
+    if (fullPath !== fullCurrentPath) {
+      // Update previous path if the current path is not a create/edit page
+      if (!isCreateOrEditPage(fullCurrentPath)) {
+        setPreviousPath(fullCurrentPath);
+      }
+
+      // Add to navigation history if not a create/edit page
+      if (!isCreateOrEditPage(fullPath)) {
+        setPathHistory(prev => {
+          // Don't add duplicate sequential entries
+          if (prev[prev.length - 1] !== fullPath) {
+            const newHistory = [...prev, fullPath];
+            return newHistory.slice(-30); // Keep a reasonable history size (last 30 entries)
+          }
+          return prev;
+        });
+      }
+
+      // Always update current path
+      setCurrentPath(fullPath);
+    }
+  }, [location.pathname, location.search, currentPath]);
 
   return (
-    <NavigationContext.Provider value={{ previousPath, currentPath }}>
+    <NavigationContext.Provider value={{
+      previousPath,
+      currentPath,
+      pathHistory
+    }}>
       {children}
     </NavigationContext.Provider>
   );

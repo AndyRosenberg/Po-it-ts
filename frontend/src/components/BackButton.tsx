@@ -8,7 +8,6 @@ type BackButtonProps = {
   preserveDraftState?: boolean;
   fallbackPath?: string;
   children?: React.ReactNode;
-  forceUseDefault?: boolean; // Force using the fallback path instead of navigation history
 };
 
 // Create a separate file for shared utilities
@@ -23,44 +22,14 @@ export const BackButton = ({
   preserveDraftState = false,
   fallbackPath = '/',
   children,
-  forceUseDefault = false
 }: BackButtonProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { authUser } = useAuthContext();
-  const { previousPath } = useNavigation();
+  const { previousPath, pathHistory } = useNavigation();
   const queryClient = useQueryClient();
 
   const handleGoBack = () => {
-    // If forceUseDefault is true, always go to the fallback path
-    if (forceUseDefault) {
-      navigate(fallbackPath);
-      return;
-    }
-
-    // Special handling for draft poems
-    if (preserveDraftState) {
-      // Check if we're on a poem page
-      const onPoemPage = location.pathname.includes('/poems/') && !location.pathname.includes('/edit');
-
-      if (onPoemPage) {
-        // Get isDraft from location state or sessionStorage (set during ViewPoem component mount)
-        const isDraft = location.state?.isDraft || sessionStorage.getItem('viewingDraft') === 'true';
-
-        // Navigate to drafts tab if appropriate and we have an authenticated user
-        if (isDraft && authUser) {
-          // Before navigating, set a flag in localStorage to force drafts tab
-          localStorage.setItem('forceDraftsTab', 'true');
-
-          // Clear the viewing draft flag
-          sessionStorage.removeItem('viewingDraft');
-
-          navigate(`/profile/${authUser.id}?tab=drafts`);
-          return;
-        }
-      }
-    }
-
     // If we're on a create page, verify if we should preserve draft state based on content
     if (location.pathname.includes('/create')) {
       // Only preserveDraftState if explicitly requested AND there's enough content to save
@@ -111,6 +80,11 @@ export const BackButton = ({
       return;
     }
 
+    if (location.pathname.includes('/profile/') && previousPath.match(/\/poems\/([^/]+)/)) {
+      navigate(fallbackPath);
+      return;
+    }
+
     // If we're on an edit page, try to use browser history or go to view mode
     if (location.pathname.includes('/poems/') && location.pathname.includes('/edit')) {
       // Try using browser history for normal back navigation
@@ -134,14 +108,14 @@ export const BackButton = ({
     }
 
     // Check if we're coming from a poem page after publishing
-    const preventBackToCreate = sessionStorage.getItem('preventBackToCreate') === 'true';
-    if (preventBackToCreate && location.pathname.includes('/poems/') && !location.pathname.includes('/edit')) {
-      // Clear the flag
-      sessionStorage.removeItem('preventBackToCreate');
-
-      // Go to home instead of back to create
-      navigate(fallbackPath);
-      return;
+    // We still want to prevent going back to create pages
+    if (location.pathname.includes('/poems/') && !location.pathname.includes('/edit')) {
+      // Check if previous path was a create page
+      if (previousPath.includes('/create')) {
+        // Go to home instead of back to create
+        navigate(fallbackPath);
+        return;
+      }
     }
 
     // Check if previous path was an edit or create page
@@ -157,8 +131,17 @@ export const BackButton = ({
       return;
     }
 
-    // Use the tracked previous path from context
-    navigate(previousPath);
+    // Find the last path in our history that isn't the current one and isn't a create/edit page
+    const historyWithoutCurrent = pathHistory.filter(path => path !== location.pathname);
+
+    // If we have history, go to the most recent valid entry
+    if (historyWithoutCurrent.length > 0) {
+      navigate(historyWithoutCurrent[historyWithoutCurrent.length - 1]);
+      return;
+    }
+
+    // Last resort fallback to home
+    navigate(fallbackPath);
   };
 
   return (

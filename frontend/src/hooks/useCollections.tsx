@@ -127,7 +127,7 @@ export const useIsPoemPinned = (poemId: string) => {
 // Hook for pinning a poem
 export const usePinPoem = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async(poemId: string) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/pin`, {
@@ -156,9 +156,9 @@ export const usePinPoem = () => {
 // Hook for unpinning a poem
 export const useUnpinPoem = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async({ pinId, poemId }: { pinId: string, poemId: string }) => {
+    mutationFn: async({ pinId }: { pinId: string, poemId: string }) => {
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/pins/${pinId}`, {
         method: 'DELETE',
         credentials: 'include',

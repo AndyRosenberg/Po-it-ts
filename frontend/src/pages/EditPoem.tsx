@@ -254,8 +254,7 @@ export const EditPoem = () => {
 
     // If it was a draft and the user was viewing drafts, navigate back to drafts tab
     if (isDraft && poemData?.isOwner) {
-      // Before navigating, set a flag in localStorage
-      localStorage.setItem('forceDraftsTab', 'true');
+      // Navigate directly to drafts tab - no need for localStorage flag anymore
       navigate(`/profile/${poemData.userId}?tab=drafts`);
       return;
     }

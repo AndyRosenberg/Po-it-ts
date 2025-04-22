@@ -6,7 +6,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 
 export const useDeletePoem = () => {
   const navigate = useNavigate();
-  const { previousPath } = useNavigation();
+  const { pathHistory } = useNavigation();
   const queryClient = useQueryClient();
 
   const { mutate: deletePoem, isPending: isLoading, error } = useMutation({
@@ -32,24 +32,19 @@ export const useDeletePoem = () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['userPoems'] });
 
-      const preventBackToCreate = sessionStorage.getItem('preventBackToCreate') === 'true';
-      if (preventBackToCreate && location.pathname.includes('/poems/') && !location.pathname.includes('/edit')) {
-        sessionStorage.removeItem('preventBackToCreate');
+      // Find the most recent history entry that isn't a poem and isn't a create/edit page
+      const currentPath = location.pathname;
+      const validHistory = pathHistory
+        .filter(path => path !== currentPath && !path.includes('/poems/') && !isCreateOrEditPage(path));
 
-        navigate('/');
+      if (validHistory.length > 0) {
+        // Navigate to the most recent valid history entry
+        navigate(validHistory[validHistory.length - 1]);
         return;
       }
 
-      if (isCreateOrEditPage(previousPath)) {
-        navigate('/');
-        return;
-      }
-
-      if (previousPath === location.pathname) {
-        navigate('/');
-      }
-
-      navigate(previousPath);
+      // If no valid history, go to home
+      navigate('/');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete poem');

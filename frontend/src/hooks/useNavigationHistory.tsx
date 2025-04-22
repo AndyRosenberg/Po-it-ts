@@ -13,11 +13,11 @@ export const useNavigationHistory = () => {
       (location.pathname.includes('/poems/') && location.pathname.includes('/edit'));
 
     if (!isCreateOrEdit) {
-      // Store current path as previous for the next navigation
-      previousPathRef.current = location.pathname;
+      // Store current path with search params as previous for the next navigation
+      previousPathRef.current = location.pathname + location.search;
     }
 
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   return {
     previousPath: previousPathRef.current

@@ -33,43 +33,26 @@ const UserProfile = () => {
     };
   }, [searchQuery]);
 
+  // Simplified tab handling - we don't need to restrict access here
+  // The UI will handle conditional rendering based on isOwnProfile
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const tabParam = queryParams.get('tab');
 
-    // Process URL parameters
-
-    // For 'drafts' tab, only activate if it's the user's own profile
-    if (tabParam === 'drafts') {
-      if (isOwnProfile) {
-        setActiveTab('drafts');
-      } else {
-        setActiveTab('poems');
-        navigate(`/profile/${userId}`, { replace: true });
-        // Redirect from drafts to poems
-      }
-    } else if (tabParam === 'followers' || tabParam === 'following' || tabParam === 'collections') {
+    // Set active tab based on URL parameter
+    if (tabParam === 'drafts' || tabParam === 'followers' || tabParam === 'following' || tabParam === 'collections') {
       setActiveTab(tabParam);
     } else {
-      const forceDraftsTab = localStorage.getItem('forceDraftsTab') === 'true';
-
-      if (forceDraftsTab && isOwnProfile) {
-        setActiveTab('drafts');
-        navigate(`/profile/${userId}?tab=drafts`, { replace: true });
-        localStorage.removeItem('forceDraftsTab');
-      } else {
-        setActiveTab('poems');
-      }
+      // Default to poems tab if no tab is specified
+      setActiveTab('poems');
     }
-  }, [location.search, userId, isOwnProfile, navigate]);
+  }, [location.search]);
 
   // Determine if this is the user's own profile
   useEffect(() => {
     if (!authLoading && currentUser && userId) {
       const isOwn = currentUser.id === userId;
       setIsOwnProfile(isOwn);
-
-      // Set isOwnProfile state
     }
   }, [currentUser, userId, authLoading]);
 
@@ -94,7 +77,7 @@ const UserProfile = () => {
 
   const { data: followers, isLoading: followersLoading } = useFollowers(userId);
   const { data: following, isLoading: followingLoading } = useFollowing(userId);
-  
+
   // Collections hook
   const {
     collections,
@@ -132,7 +115,7 @@ const UserProfile = () => {
     },
     [fetchNextDraftPage, hasNextDraftPage, isFetchingNextDraftPage, draftsLoading]
   );
-  
+
   // Observer for collections
   const handleCollectionsObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -180,7 +163,7 @@ const UserProfile = () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
   }, [handleDraftsObserver, activeTab]);
-  
+
   // Set up the observer effect for collections
   useEffect(() => {
     if (activeTab !== 'collections') return;
@@ -233,7 +216,7 @@ const UserProfile = () => {
         <header className="py-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <BackButton fallbackPath="/" forceUseDefault={true} />
+              <BackButton fallbackPath="/" />
               <h1 className="text-2xl font-bold text-white">Profile</h1>
             </div>
           </div>
@@ -548,7 +531,7 @@ const UserProfile = () => {
                 )}
               </div>
             )}
-            
+
             {/* Collections tab */}
             {activeTab === 'collections' && (
               <div>

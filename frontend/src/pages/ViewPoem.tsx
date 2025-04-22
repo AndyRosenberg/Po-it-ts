@@ -94,13 +94,6 @@ export const ViewPoem = () => {
         const data = await response.json();
         setPoem(data);
 
-        // Store draft status in sessionStorage for the BackButton to use
-        if (data.isDraft) {
-          sessionStorage.setItem('viewingDraft', 'true');
-        } else {
-          sessionStorage.removeItem('viewingDraft');
-        }
-
         // Check stanza comments immediately after fetching the poem
         if (data && data.stanzas && data.stanzas.length > 0) {
           await checkStanzaComments(data.stanzas);
@@ -283,14 +276,14 @@ export const ViewPoem = () => {
 
                   {/* Pin button - show in action area if not owner */}
                   {!poem.isOwner && (
-                    <PinButton 
-                      poemId={poem.id} 
-                      poemUserId={poem.user?.id || ''} 
+                    <PinButton
+                      poemId={poem.id}
+                      poemUserId={poem.user?.id || ''}
                       size="md"
                       showCount={true}
                     />
                   )}
-                  
+
                   {/* Share button */}
                   <button
                     onClick={() => setIsShareModalOpen(true)}
