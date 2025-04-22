@@ -51,10 +51,35 @@ export const getUserCollections = async (request: Request, response: Response) =
       }
     });
 
-    // Handle pagination
+    // For collections that are of type 'Poem', fetch the poem titles
+    const collectionsWithDetails = await Promise.all(
+      collections.map(async (collection) => {
+        if (collection.collectableType === 'Poem') {
+          const poem = await prisma.poem.findUnique({
+            where: { id: collection.collectableId },
+            select: { 
+              title: true,
+              user: {
+                select: {
+                  username: true
+                }
+              }
+            }
+          });
+          
+          return {
+            ...collection,
+            poem: poem || { title: 'Unknown Poem', user: { username: '' } }
+          };
+        }
+        return collection;
+      })
+    );
+
+    // Handle pagination 
     const hasMore = collections.length > finalLimit;
-    const paginatedCollections = hasMore ? collections.slice(0, finalLimit) : collections;
-    const nextCursor = hasMore ? paginatedCollections[paginatedCollections.length - 1].id : null;
+    const paginatedCollections = hasMore ? collectionsWithDetails.slice(0, finalLimit) : collectionsWithDetails;
+    const nextCursor = hasMore ? collections[finalLimit - 1].id : null;
 
     // Return response
     response.status(200).json({

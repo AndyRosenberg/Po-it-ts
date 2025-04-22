@@ -587,13 +587,18 @@ const UserProfile = () => {
                         >
                           <div className="flex justify-between items-start">
                             <h3 className="text-lg font-medium text-white mb-2">
-                              {collection.collectableType}
+                              {collection.poem?.title || collection.collectableType}
                             </h3>
                             <span className="px-2 py-1 text-xs rounded-md bg-cyan-500/20 text-cyan-200">Pinned</span>
                           </div>
-                          <p className="text-sm text-slate-400">
-                            Added on {new Date(collection.createdAt).toLocaleDateString()}
-                          </p>
+                          <div className="flex justify-between">
+                            <p className="text-sm text-slate-400">
+                              {collection.poem?.user?.username ? `by ${collection.poem.user.username}` : ''}
+                            </p>
+                            <p className="text-sm text-slate-400">
+                              Added on {new Date(collection.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>

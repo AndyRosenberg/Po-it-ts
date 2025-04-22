@@ -208,14 +208,6 @@ export const ViewPoem = () => {
                       Draft
                     </span>
                   )}
-                  {!poem.isOwner && (
-                    <PinButton 
-                      poemId={poem.id} 
-                      poemUserId={poem.user?.id || ''} 
-                      size="md"
-                      showCount={true}
-                    />
-                  )}
                 </div>
               </div>
 
@@ -295,7 +287,7 @@ export const ViewPoem = () => {
                       poemId={poem.id} 
                       poemUserId={poem.user?.id || ''} 
                       size="md"
-                      showCount={false}
+                      showCount={true}
                     />
                   )}
                   

@@ -5,10 +5,17 @@ export interface Collection {
   userId: string;
   collectableId: string;
   collectableType: string;
+  createdAt: string;
   user?: {
     id: string;
     username: string;
     profilePic: string;
+  };
+  poem?: {
+    title: string;
+    user: {
+      username: string;
+    }
   };
 }
 
