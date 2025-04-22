@@ -105,9 +105,11 @@ const PinButton: React.FC<PinButtonProps> = ({
   };
 
   return (
+    // Use a higher z-index and prevent events from reaching the parent
     <div 
-      className="flex items-center"
-      onClick={isOwnPoem ? stopPropagation : undefined}
+      className="flex items-center relative z-10" 
+      onClick={stopPropagation}
+      style={{ cursor: 'default' }}
     >
       <button
         onClick={handlePin}
@@ -116,14 +118,16 @@ const PinButton: React.FC<PinButtonProps> = ({
           ${buttonSizeClasses[size]} 
           rounded-full
           ${isOwnPoem 
-            ? 'text-amber-500 cursor-default' 
+            ? 'text-amber-500' 
             : isPinned 
               ? 'text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20' 
               : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-700'
           }
           transition-colors
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent
+          disabled:opacity-50 disabled:hover:bg-transparent
+          disabled:cursor-not-allowed
         `}
+        style={{ cursor: isOwnPoem ? 'default' : 'pointer' }}
         title={isOwnPoem ? "You cannot pin your own poems" : isPinned ? "Remove from collection" : "Add to collection"}
         aria-label={isOwnPoem ? "You cannot pin your own poems" : isPinned ? "Remove from collection" : "Add to collection"}
       >
