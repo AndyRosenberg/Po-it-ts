@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Poem } from './usePoems';
 
 interface Stanza {
   id?: string;
@@ -185,7 +186,7 @@ export const useCreatePoem = () => {
 
       return response.json();
     },
-    onSuccess: (updatedPoem) => {
+    onSuccess: (updatedPoem: Poem) => {
       setPoemTitle(updatedPoem.title);
       setPoemId(updatedPoem.id);
 
@@ -226,7 +227,7 @@ export const useCreatePoem = () => {
   // Complete and view the poem
   const completePoem = async(unsavedTitle?: string, unsavedStanza?: string) => {
     let currentPoemId = poemId;
-    let updatedPoem: Record<string, unknown> | null = null;
+    let updatedPoem: Poem | null = null;
 
     try {
       // Step 1: Create the poem if we don't have a poem ID yet
@@ -238,7 +239,7 @@ export const useCreatePoem = () => {
       // Step 2: Update title if provided (even if it's the same as current, we want to ensure it's saved)
       if (unsavedTitle !== undefined) {
         updatedPoem = await updateTitle(unsavedTitle);
-        currentPoemId = updatedPoem.id; // Just to be safe
+        currentPoemId = updatedPoem.id;
       }
 
       // Step 3: Add any unsaved stanza

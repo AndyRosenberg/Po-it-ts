@@ -31,18 +31,14 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // Only update if we're actually changing paths
     if (fullPath !== fullCurrentPath) {
-      // Update previous path if the current path is not a create/edit page
-      if (!isCreateOrEditPage(fullCurrentPath)) {
-        setPreviousPath(fullCurrentPath);
-      }
+      setPreviousPath(fullCurrentPath);
 
       // Add to navigation history if not a create/edit page
       if (!isCreateOrEditPage(fullPath)) {
         setPathHistory(prev => {
-          // Don't add duplicate sequential entries
           if (prev[prev.length - 1] !== fullPath) {
             const newHistory = [...prev, fullPath];
-            return newHistory.slice(-30); // Keep a reasonable history size (last 30 entries)
+            return newHistory.slice(-30);
           }
           return prev;
         });

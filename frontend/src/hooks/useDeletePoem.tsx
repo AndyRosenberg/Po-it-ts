@@ -38,7 +38,6 @@ export const useDeletePoem = () => {
         .filter(path => path !== currentPath && !path.includes('/poems/') && !isCreateOrEditPage(path));
 
       if (validHistory.length > 0) {
-        // Navigate to the most recent valid history entry
         navigate(validHistory[validHistory.length - 1]);
         return;
       }

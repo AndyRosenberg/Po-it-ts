@@ -29,11 +29,6 @@ export const BackButton = ({
   const { previousPath, pathHistory } = useNavigation();
   const queryClient = useQueryClient();
 
-  const getBasePath = (url: string) => {
-    const match = url.match(/^([^?#]+)/);
-    return match ? match[1] : '';
-  }
-
   const handleGoBack = () => {
     // If we're on a create page, verify if we should preserve draft state based on content
     if (location.pathname.includes('/create')) {
@@ -85,11 +80,6 @@ export const BackButton = ({
       return;
     }
 
-    if (location.pathname.includes('/profile/') && previousPath.match(/\/poems\/([^/]+)/)) {
-      navigate(fallbackPath);
-      return;
-    }
-
     // If we're on an edit page, try to use browser history or go to view mode
     if (location.pathname.includes('/poems/') && location.pathname.includes('/edit')) {
       // Try using browser history for normal back navigation
@@ -124,6 +114,7 @@ export const BackButton = ({
     }
 
     // Check if previous path was an edit or create page
+    console.log(isCreateOrEditPage(previousPath), pathHistory)
     if (isCreateOrEditPage(previousPath)) {
       // Don't go back to create or edit pages
       navigate(fallbackPath);
@@ -136,17 +127,7 @@ export const BackButton = ({
       return;
     }
 
-    // Find the last path in our history that isn't the current one and isn't a create/edit page
-    const historyWithoutCurrent = pathHistory.filter(path => getBasePath(path) !== getBasePath(location.pathname));
-
-    // If we have history, go to the most recent valid entry
-    if (historyWithoutCurrent.length > 0) {
-      navigate(historyWithoutCurrent[historyWithoutCurrent.length - 1]);
-      return;
-    }
-
-    // Last resort fallback to home
-    navigate(fallbackPath);
+    return navigate(-1);
   };
 
   return (
