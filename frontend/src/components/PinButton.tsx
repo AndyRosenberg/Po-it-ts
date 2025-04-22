@@ -98,22 +98,34 @@ const PinButton: React.FC<PinButtonProps> = ({
     lg: 'h-5 w-5'
   };
   
+  // Function to stop event propagation
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
   return (
-    <div className="flex items-center">
+    <div 
+      className="flex items-center"
+      onClick={isOwnPoem ? stopPropagation : undefined}
+    >
       <button
         onClick={handlePin}
         disabled={isLoading || isOwnPoem || !user}
         className={`
           ${buttonSizeClasses[size]} 
           rounded-full
-          ${isPinned 
-            ? 'text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20' 
-            : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-700'}
+          ${isOwnPoem 
+            ? 'text-amber-500 cursor-default' 
+            : isPinned 
+              ? 'text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20' 
+              : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-700'
+          }
           transition-colors
           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent
         `}
-        title={isPinned ? "Remove from collection" : "Add to collection"}
-        aria-label={isPinned ? "Remove from collection" : "Add to collection"}
+        title={isOwnPoem ? "You cannot pin your own poems" : isPinned ? "Remove from collection" : "Add to collection"}
+        aria-label={isOwnPoem ? "You cannot pin your own poems" : isPinned ? "Remove from collection" : "Add to collection"}
       >
         {isLoading ? (
           <div className={`animate-spin rounded-full border-2 border-t-transparent ${spinnerSizeClasses[size]}`}></div>
@@ -121,7 +133,11 @@ const PinButton: React.FC<PinButtonProps> = ({
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 24 24" 
-            fill="currentColor" 
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className={iconSizeClasses[size]}
           >
             <line x1="12" y1="17" x2="12" y2="22" />
@@ -145,7 +161,7 @@ const PinButton: React.FC<PinButtonProps> = ({
       </button>
       
       {showCount && (
-        <span className={`ml-1 ${textSizeClasses[size]} ${isPinned ? 'text-cyan-400' : 'text-slate-400'}`}>
+        <span className={`ml-1 ${textSizeClasses[size]} text-slate-400`}>
           {isCountLoading ? '...' : pinsCount}
         </span>
       )}
