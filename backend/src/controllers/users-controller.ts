@@ -3,10 +3,10 @@ import prisma from '../db/prisma.js';
 import bcryptjs from "bcryptjs";
 import { isValidEmail } from '../utils/validation.js';
 
-export const getUserById = async (request: Request, response: Response) => {
+export const getUserById = async(request: Request, response: Response) => {
   try {
     const { userId } = request.params;
-    
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -31,12 +31,12 @@ export const getUserById = async (request: Request, response: Response) => {
     }
 
     response.status(200).json(user);
-  } catch (error: any) {
+  } catch (_error: any) {
     response.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const updateUser = async (request: Request, response: Response) => {
+export const updateUser = async(request: Request, response: Response) => {
   try {
     const { username, email, password, currentPassword } = request.body;
     const userId = request.user.id;
@@ -97,12 +97,12 @@ export const updateUser = async (request: Request, response: Response) => {
       username: updatedUser.username,
       profilePic: updatedUser.profilePic
     });
-  } catch (error: any) {
+  } catch (_error: any) {
     response.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const deleteUser = async (request: Request, response: Response) => {
+export const deleteUser = async(request: Request, response: Response) => {
   try {
     const userId = request.user.id;
     const { password } = request.body;
@@ -124,13 +124,13 @@ export const deleteUser = async (request: Request, response: Response) => {
     }
 
     // Delete user and all related data using transactions
-    await prisma.$transaction(async (prismaClient) => {
+    await prisma.$transaction(async(prismaClient) => {
       // Delete user's poems and related comments
       const poems = await prismaClient.poem.findMany({
         where: { userId },
         select: { id: true }
       });
-      
+
       const poemIds = poems.map(poem => poem.id);
 
       // Delete user's comments on other poems
@@ -164,6 +164,7 @@ export const deleteUser = async (request: Request, response: Response) => {
 
     response.status(200).json({ message: "Account successfully deleted" });
   } catch (error: any) {
+    // We're keeping this error as non-prefixed since we need to log it
     console.error("Error deleting user:", error);
     response.status(500).json({ error: "Internal Server Error" });
   }

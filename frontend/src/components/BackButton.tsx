@@ -29,6 +29,11 @@ export const BackButton = ({
   const { previousPath, pathHistory } = useNavigation();
   const queryClient = useQueryClient();
 
+  const getBasePath = (url: string) => {
+    const match = url.match(/^([^?#]+)/);
+    return match ? match[1] : '';
+  }
+
   const handleGoBack = () => {
     // If we're on a create page, verify if we should preserve draft state based on content
     if (location.pathname.includes('/create')) {
@@ -132,7 +137,7 @@ export const BackButton = ({
     }
 
     // Find the last path in our history that isn't the current one and isn't a create/edit page
-    const historyWithoutCurrent = pathHistory.filter(path => path !== location.pathname);
+    const historyWithoutCurrent = pathHistory.filter(path => getBasePath(path) !== getBasePath(location.pathname));
 
     // If we have history, go to the most recent valid entry
     if (historyWithoutCurrent.length > 0) {

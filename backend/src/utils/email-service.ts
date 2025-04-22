@@ -14,17 +14,17 @@ const createTransporter = () => {
 };
 
 // Send a password reset email
-export const sendPasswordResetEmail = async (
-  email: string, 
+export const sendPasswordResetEmail = async(
+  email: string,
   resetToken: string,
   username: string
 ) => {
   try {
     const transporter = createTransporter();
-    
+
     // The frontend URL where the user can reset their password
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
+
     // Email content
     const mailOptions = {
       from: `"Po-it Support" <${process.env.EMAIL_FROM || 'support@po-it.com'}>`,
@@ -59,7 +59,7 @@ export const sendPasswordResetEmail = async (
         </div>
       `,
     };
-    
+
     // Send the email
     await transporter.sendMail(mailOptions);
     return true;

@@ -7,7 +7,7 @@ export const generateToken =  (userId: string, request: Request, response: Respo
   const token = jwt.sign({ userId }, process.env.JWT_SECRET!, {
     expiresIn: "15d"
   });
-  
+
   const sameSiteValue = request.get('Origin') === process.env.TRUSTED_ORIGIN ? 'none' : 'strict';
 
   response.cookie("jwt", token, {

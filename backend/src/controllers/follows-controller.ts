@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../db/prisma.js';
 
 // Follow a user
-export const followUser = async (req: Request, res: Response) => {
+export const followUser = async(req: Request, res: Response) => {
   try {
     const followerId = req.user.id; // Current user
     const { followingId } = req.params; // User to follow
@@ -49,7 +49,7 @@ export const followUser = async (req: Request, res: Response) => {
 };
 
 // Unfollow a user
-export const unfollowUser = async (req: Request, res: Response) => {
+export const unfollowUser = async(req: Request, res: Response) => {
   try {
     const followerId = req.user.id; // Current user
     const { followingId } = req.params; // User to unfollow
@@ -96,7 +96,7 @@ export const unfollowUser = async (req: Request, res: Response) => {
 };
 
 // Get followers of a user
-export const getFollowers = async (req: Request, res: Response) => {
+export const getFollowers = async(req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
@@ -125,7 +125,7 @@ export const getFollowers = async (req: Request, res: Response) => {
 };
 
 // Get users that a user is following
-export const getFollowing = async (req: Request, res: Response) => {
+export const getFollowing = async(req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
@@ -154,7 +154,7 @@ export const getFollowing = async (req: Request, res: Response) => {
 };
 
 // Check if current user is following another user
-export const checkFollowing = async (req: Request, res: Response) => {
+export const checkFollowing = async(req: Request, res: Response) => {
   try {
     const followerId = req.user.id;
     const { userId } = req.params;

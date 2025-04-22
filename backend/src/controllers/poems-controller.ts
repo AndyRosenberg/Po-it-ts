@@ -3,27 +3,27 @@ import prisma from "../db/prisma.js";
 import { Prisma } from "@prisma/client";
 
 // Get poems by a specific user with cursor-based pagination and search
-export const getUserPoems = async (request: Request, response: Response) => {
+export const getUserPoems = async(request: Request, response: Response) => {
   try {
     const { userId } = request.params;
     const { cursor, limit = '10', search, draftsOnly = 'false' } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
     const showDraftsOnly = draftsOnly === 'true';
-    
+
     // Verify user exists
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
-    
+
     if (!user) {
       return response.status(404).json({ error: "User not found" });
     }
-    
+
     const isCurrentUserOwner = !!request.user && request.user.id === userId;
-    
+
     // Base where clause
-    let whereClause: any = { 
+    let whereClause: any = {
       userId,
       // Only show drafts if viewing own profile and draftsOnly is true
       ...(isCurrentUserOwner && showDraftsOnly ? { isDraft: true } : { isDraft: false })
@@ -59,7 +59,7 @@ export const getUserPoems = async (request: Request, response: Response) => {
         ]
       };
     }
-    
+
     // Base query
     const baseQuery = {
       where: whereClause,
@@ -81,12 +81,12 @@ export const getUserPoems = async (request: Request, response: Response) => {
     // Add cursor if provided
     const queryWithCursor = cursor
       ? {
-          ...baseQuery,
-          cursor: {
-            id: cursor as string
-          },
-          skip: 1, // Skip the cursor item
-        }
+        ...baseQuery,
+        cursor: {
+          id: cursor as string
+        },
+        skip: 1, // Skip the cursor item
+      }
       : baseQuery;
 
     // Execute the query with pagination
@@ -109,17 +109,17 @@ export const getUserPoems = async (request: Request, response: Response) => {
     const totalCount = await prisma.poem.count({
       where: whereClause
     });
-    
+
     // Add search match information
     let poemsWithSearchMatches = poemsWithOwnership;
-    
+
     if (isSearchQuery && search) {
       const searchTerm = search.toString().trim().toLowerCase();
-      
+
       poemsWithSearchMatches = poemsWithOwnership.map(poem => {
         // Find matches in title
         const titleMatch = poem.title.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in stanzas
         const matchingStanzas = poem.stanzas
           .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
@@ -127,16 +127,16 @@ export const getUserPoems = async (request: Request, response: Response) => {
             // Get a snippet of text around the match
             const stanzaText = stanza.body;
             const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
-            
+
             // Get context around the match (up to 50 chars before and after)
             const startIndex = Math.max(0, matchIndex - 50);
             const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
             let snippet = stanzaText.substring(startIndex, endIndex);
-            
+
             // Add ellipsis if we trimmed the text
             if (startIndex > 0) snippet = '...' + snippet;
             if (endIndex < stanzaText.length) snippet = snippet + '...';
-            
+
             return {
               id: stanza.id,
               position: stanza.position,
@@ -144,7 +144,7 @@ export const getUserPoems = async (request: Request, response: Response) => {
               matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
             };
           });
-        
+
         return {
           ...poem,
           searchMatches: {
@@ -167,10 +167,10 @@ export const getUserPoems = async (request: Request, response: Response) => {
   }
 };
 
-export const deletePoem = async (request: Request, response: Response) => {
+export const deletePoem = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
-    
+
     // Verify the poem belongs to the user
     const poem = await prisma.poem.findUnique({
       where: {
@@ -178,25 +178,25 @@ export const deletePoem = async (request: Request, response: Response) => {
         userId: request.user.id
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     // Delete all stanzas first (will cascade, but doing it explicitly for clarity)
     await prisma.stanza.deleteMany({
       where: {
         poemId
       }
     });
-    
+
     // Delete the poem
     await prisma.poem.delete({
       where: {
         id: poemId
       }
     });
-    
+
     response.status(204).send();
   } catch (error: any) {
     console.error("Error in deletePoem: ", error.message);
@@ -204,10 +204,10 @@ export const deletePoem = async (request: Request, response: Response) => {
   }
 }
 
-export const createPoem = async (request: Request, response: Response) => {
+export const createPoem = async(request: Request, response: Response) => {
   try {
     const { title, isDraft = true } = request.body;
-    
+
     const newPoem = await prisma.poem.create({
       data: {
         userId: request.user.id,
@@ -224,12 +224,12 @@ export const createPoem = async (request: Request, response: Response) => {
 }
 
 // Get current user's own poems with cursor-based pagination and fuzzy search
-export const getMyPoems = async (request: Request, response: Response) => {
+export const getMyPoems = async(request: Request, response: Response) => {
   try {
     const { cursor, limit = '10', search, draftsOnly = 'false' } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
     const showDraftsOnly = draftsOnly === 'true';
-    
+
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
@@ -238,7 +238,7 @@ export const getMyPoems = async (request: Request, response: Response) => {
       userId: request.user.id,
       isDraft: showDraftsOnly ? true : false
     };
-    
+
     let isSearchQuery = false;
 
     // Add search criteria if provided
@@ -282,12 +282,12 @@ export const getMyPoems = async (request: Request, response: Response) => {
     // Add cursor if provided
     const queryWithCursor = cursor
       ? {
-          ...baseQuery,
-          cursor: {
-            id: cursor as string
-          },
-          skip: 1, // Skip the cursor item
-        }
+        ...baseQuery,
+        cursor: {
+          id: cursor as string
+        },
+        skip: 1, // Skip the cursor item
+      }
       : baseQuery;
 
     // Execute the query with pagination
@@ -305,17 +305,17 @@ export const getMyPoems = async (request: Request, response: Response) => {
     const totalCount = await prisma.poem.count({
       where: whereClause
     });
-    
+
     // Add search match information
     let poemsWithSearchMatches = paginatedPoems;
-    
+
     if (isSearchQuery && search) {
       const searchTerm = search.toString().trim().toLowerCase();
-      
+
       poemsWithSearchMatches = paginatedPoems.map(poem => {
         // Find matches in title
         const titleMatch = poem.title.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in stanzas
         const matchingStanzas = poem.stanzas
           .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
@@ -323,16 +323,16 @@ export const getMyPoems = async (request: Request, response: Response) => {
             // Get a snippet of text around the match
             const stanzaText = stanza.body;
             const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
-            
+
             // Get context around the match (up to 50 chars before and after)
             const startIndex = Math.max(0, matchIndex - 50);
             const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
             let snippet = stanzaText.substring(startIndex, endIndex);
-            
+
             // Add ellipsis if we trimmed the text
             if (startIndex > 0) snippet = '...' + snippet;
             if (endIndex < stanzaText.length) snippet = snippet + '...';
-            
+
             return {
               id: stanza.id,
               position: stanza.position,
@@ -340,7 +340,7 @@ export const getMyPoems = async (request: Request, response: Response) => {
               matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
             };
           });
-        
+
         return {
           ...poem,
           searchMatches: {
@@ -364,17 +364,17 @@ export const getMyPoems = async (request: Request, response: Response) => {
 }
 
 // Get all poems from all users with cursor-based pagination and fuzzy search
-export const getAllPoems = async (request: Request, response: Response) => {
+export const getAllPoems = async(request: Request, response: Response) => {
   try {
     const { cursor, limit = '10', search } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
-    
+
     // Ensure reasonable limits
     const finalLimit: number = Math.min(Math.max(limitNum, 1), 50);
 
     // Base where clause - only show published poems
     let whereClause: any = { isDraft: false };
-    
+
     let isSearchQuery = false;
 
     // Add search criteria if provided
@@ -432,12 +432,12 @@ export const getAllPoems = async (request: Request, response: Response) => {
     // Add cursor if provided
     const queryWithCursor = cursor
       ? {
-          ...baseQuery,
-          cursor: {
-            id: cursor as string
-          },
-          skip: 1, // Skip the cursor item
-        }
+        ...baseQuery,
+        cursor: {
+          id: cursor as string
+        },
+        skip: 1, // Skip the cursor item
+      }
       : baseQuery;
 
     // Execute the query with pagination
@@ -449,33 +449,33 @@ export const getAllPoems = async (request: Request, response: Response) => {
     // Determine if there are more results and the next cursor
     const hasMore = poems.length > finalLimit;
     const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
-    
+
     // Set isOwner flag for each poem
     const poemsWithOwnership = paginatedPoems.map(poem => ({
       ...poem,
       isOwner: poem.userId === request.user.id
     }));
-    
+
     const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
 
     // Get total count for reference (optional)
     const totalCount = await prisma.poem.count({
       where: whereClause
     });
-    
+
     // Add search match information
     let poemsWithSearchMatches = poemsWithOwnership;
-    
+
     if (isSearchQuery && search) {
       const searchTerm = search.toString().trim().toLowerCase();
-      
+
       poemsWithSearchMatches = poemsWithOwnership.map(poem => {
         // Find matches in title
         const titleMatch = poem.title.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in username
         const usernameMatch = poem.user && poem.user.username.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in stanzas
         const matchingStanzas = poem.stanzas
           .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
@@ -483,16 +483,16 @@ export const getAllPoems = async (request: Request, response: Response) => {
             // Get a snippet of text around the match
             const stanzaText = stanza.body;
             const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
-            
+
             // Get context around the match (up to 50 chars before and after)
             const startIndex = Math.max(0, matchIndex - 50);
             const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
             let snippet = stanzaText.substring(startIndex, endIndex);
-            
+
             // Add ellipsis if we trimmed the text
             if (startIndex > 0) snippet = '...' + snippet;
             if (endIndex < stanzaText.length) snippet = snippet + '...';
-            
+
             return {
               id: stanza.id,
               position: stanza.position,
@@ -500,7 +500,7 @@ export const getAllPoems = async (request: Request, response: Response) => {
               matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
             };
           });
-        
+
         return {
           ...poem,
           searchMatches: {
@@ -525,10 +525,10 @@ export const getAllPoems = async (request: Request, response: Response) => {
 }
 
 // Get specific poem by ID - for owner only
-export const getMyPoemById = async (request: Request, response: Response) => {
+export const getMyPoemById = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
-    
+
     const poem = await prisma.poem.findUnique({
       where: {
         id: poemId,
@@ -555,10 +555,10 @@ export const getMyPoemById = async (request: Request, response: Response) => {
 }
 
 // Get any poem by ID - for any user
-export const getPoemById = async (request: Request, response: Response) => {
+export const getPoemById = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
-    
+
     const poem = await prisma.poem.findUnique({
       where: {
         id: poemId
@@ -585,7 +585,7 @@ export const getPoemById = async (request: Request, response: Response) => {
 
     // Add flag to indicate if current user is the owner
     const isOwner = poem.userId === request.user.id;
-    
+
     response.status(200).json({
       ...poem,
       isOwner
@@ -596,26 +596,26 @@ export const getPoemById = async (request: Request, response: Response) => {
   }
 }
 
-export const updatePoemTitle = async (request: Request, response: Response) => {
+export const updatePoemTitle = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
     const { title } = request.body;
-    
+
     if (!title || typeof title !== 'string') {
       return response.status(400).json({ error: "Title is required" });
     }
-    
+
     const poem = await prisma.poem.findUnique({
       where: {
         id: poemId,
         userId: request.user.id
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     const updatedPoem = await prisma.poem.update({
       where: {
         id: poemId
@@ -624,7 +624,7 @@ export const updatePoemTitle = async (request: Request, response: Response) => {
         title
       }
     });
-    
+
     response.status(200).json(updatedPoem);
   } catch (error: any) {
     console.error("Error in updatePoemTitle: ", error.message);
@@ -632,14 +632,14 @@ export const updatePoemTitle = async (request: Request, response: Response) => {
   }
 }
 
-export const createStanza = async (request: Request, response: Response) => {
+export const createStanza = async(request: Request, response: Response) => {
   try {
     const { poemId, body } = request.body;
-    
+
     if (!poemId || !body) {
       return response.status(400).json({ error: "Poem ID and stanza body are required" });
     }
-    
+
     // Verify the poem belongs to the user
     const poem = await prisma.poem.findUnique({
       where: {
@@ -650,16 +650,16 @@ export const createStanza = async (request: Request, response: Response) => {
         stanzas: true
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     // Calculate the next position (max position + 1)
-    const highestPosition = poem.stanzas.length === 0 
-      ? -1 
+    const highestPosition = poem.stanzas.length === 0
+      ? -1
       : Math.max(...poem.stanzas.map(s => s.position));
-    
+
     const newStanza = await prisma.stanza.create({
       data: {
         poemId,
@@ -667,7 +667,7 @@ export const createStanza = async (request: Request, response: Response) => {
         position: highestPosition + 1
       }
     });
-    
+
     response.status(201).json(newStanza);
   } catch (error: any) {
     console.error("Error in createStanza: ", error.message);
@@ -675,15 +675,15 @@ export const createStanza = async (request: Request, response: Response) => {
   }
 }
 
-export const updateStanza = async (request: Request, response: Response) => {
+export const updateStanza = async(request: Request, response: Response) => {
   try {
     const { stanzaId } = request.params;
     const { body } = request.body;
-    
+
     if (!body) {
       return response.status(400).json({ error: "Stanza body is required" });
     }
-    
+
     // Verify the stanza belongs to one of the user's poems
     const stanza = await prisma.stanza.findUnique({
       where: {
@@ -693,11 +693,11 @@ export const updateStanza = async (request: Request, response: Response) => {
         poem: true
       }
     });
-    
+
     if (!stanza || stanza.poem.userId !== request.user.id) {
       return response.status(404).json({ error: "Stanza not found" });
     }
-    
+
     const updatedStanza = await prisma.stanza.update({
       where: {
         id: stanzaId
@@ -706,7 +706,7 @@ export const updateStanza = async (request: Request, response: Response) => {
         body
       }
     });
-    
+
     response.status(200).json(updatedStanza);
   } catch (error: any) {
     console.error("Error in updateStanza: ", error.message);
@@ -714,10 +714,10 @@ export const updateStanza = async (request: Request, response: Response) => {
   }
 }
 
-export const deleteStanza = async (request: Request, response: Response) => {
+export const deleteStanza = async(request: Request, response: Response) => {
   try {
     const { stanzaId } = request.params;
-    
+
     // Verify the stanza belongs to one of the user's poems
     const stanza = await prisma.stanza.findUnique({
       where: {
@@ -727,17 +727,17 @@ export const deleteStanza = async (request: Request, response: Response) => {
         poem: true
       }
     });
-    
+
     if (!stanza || stanza.poem.userId !== request.user.id) {
       return response.status(404).json({ error: "Stanza not found" });
     }
-    
+
     await prisma.stanza.delete({
       where: {
         id: stanzaId
       }
     });
-    
+
     // Reorder remaining stanzas to keep positions consecutive
     const poemStanzas = await prisma.stanza.findMany({
       where: {
@@ -747,7 +747,7 @@ export const deleteStanza = async (request: Request, response: Response) => {
         position: Prisma.SortOrder.asc
       }
     });
-    
+
     // Update positions to be consecutive starting from 0
     for (let i = 0; i < poemStanzas.length; i++) {
       await prisma.stanza.update({
@@ -755,7 +755,7 @@ export const deleteStanza = async (request: Request, response: Response) => {
         data: { position: i }
       });
     }
-    
+
     response.status(204).send();
   } catch (error: any) {
     console.error("Error in deleteStanza: ", error.message);
@@ -764,15 +764,15 @@ export const deleteStanza = async (request: Request, response: Response) => {
 }
 
 // Reorder stanzas endpoint
-export const reorderStanzas = async (request: Request, response: Response) => {
+export const reorderStanzas = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
     const { stanzaIds } = request.body;
-    
+
     if (!poemId || !stanzaIds || !Array.isArray(stanzaIds)) {
       return response.status(400).json({ error: "Poem ID and array of stanza IDs are required" });
     }
-    
+
     // Verify the poem belongs to the user
     const poem = await prisma.poem.findUnique({
       where: {
@@ -783,26 +783,26 @@ export const reorderStanzas = async (request: Request, response: Response) => {
         stanzas: true
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     // Verify that all stanzaIds belong to this poem
     const poemStanzaIds = new Set(poem.stanzas.map(s => s.id));
     const allStanzasBelongToPoem = stanzaIds.every(id => poemStanzaIds.has(id));
-    
+
     if (!allStanzasBelongToPoem) {
       return response.status(400).json({ error: "Some stanza IDs do not belong to this poem" });
     }
-    
+
     // Verify the provided stanzaIds matches the count in DB
     if (stanzaIds.length !== poem.stanzas.length) {
-      return response.status(400).json({ 
+      return response.status(400).json({
         error: "The number of stanza IDs provided does not match the number of stanzas in the poem"
       });
     }
-    
+
     // Update positions based on the order in stanzaIds array
     for (let i = 0; i < stanzaIds.length; i++) {
       await prisma.stanza.update({
@@ -810,7 +810,7 @@ export const reorderStanzas = async (request: Request, response: Response) => {
         data: { position: i }
       });
     }
-    
+
     // Get and return the updated poem with stanzas in new order
     const updatedPoem = await prisma.poem.findUnique({
       where: {
@@ -824,7 +824,7 @@ export const reorderStanzas = async (request: Request, response: Response) => {
         }
       }
     });
-    
+
     response.status(200).json(updatedPoem);
   } catch (error: any) {
     console.error("Error in reorderStanzas: ", error.message);
@@ -833,10 +833,10 @@ export const reorderStanzas = async (request: Request, response: Response) => {
 }
 
 // Mark a poem as published (complete)
-export const publishPoem = async (request: Request, response: Response) => {
+export const publishPoem = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
-    
+
     // Verify the poem belongs to the user
     const poem = await prisma.poem.findUnique({
       where: {
@@ -844,11 +844,11 @@ export const publishPoem = async (request: Request, response: Response) => {
         userId: request.user.id
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     // Update the poem to mark as published (not draft)
     const updatedPoem = await prisma.poem.update({
       where: {
@@ -865,7 +865,7 @@ export const publishPoem = async (request: Request, response: Response) => {
         }
       }
     });
-    
+
     response.status(200).json(updatedPoem);
   } catch (error: any) {
     console.error("Error in publishPoem: ", error.message);
@@ -874,10 +874,10 @@ export const publishPoem = async (request: Request, response: Response) => {
 }
 
 // Mark a poem as draft
-export const convertToDraft = async (request: Request, response: Response) => {
+export const convertToDraft = async(request: Request, response: Response) => {
   try {
     const { poemId } = request.params;
-    
+
     // Verify the poem belongs to the user
     const poem = await prisma.poem.findUnique({
       where: {
@@ -885,11 +885,11 @@ export const convertToDraft = async (request: Request, response: Response) => {
         userId: request.user.id
       }
     });
-    
+
     if (!poem) {
       return response.status(404).json({ error: "Poem not found" });
     }
-    
+
     // Update the poem to mark as draft
     const updatedPoem = await prisma.poem.update({
       where: {
@@ -906,7 +906,7 @@ export const convertToDraft = async (request: Request, response: Response) => {
         }
       }
     });
-    
+
     response.status(200).json(updatedPoem);
   } catch (error: any) {
     console.error("Error in convertToDraft: ", error.message);
@@ -915,7 +915,7 @@ export const convertToDraft = async (request: Request, response: Response) => {
 }
 
 // Get poems for user's feed (poems from followed users)
-export const getFeedPoems = async (request: Request, response: Response) => {
+export const getFeedPoems = async(request: Request, response: Response) => {
   try {
     const { cursor, limit = '10', search } = request.query;
     const limitNum = parseInt(limit as string, 10) || 10;
@@ -938,7 +938,7 @@ export const getFeedPoems = async (request: Request, response: Response) => {
     // Get IDs of users that the current user follows
     // Include the current user's ID to show their own poems too
     const userIdsForFeed = [...currentUser.following.map(user => user.id), currentUser.id];
-    
+
     // Base where clause to get poems from followed users and the user's own poems
     // Only show published poems, not drafts
     let whereClause: any = {
@@ -947,7 +947,7 @@ export const getFeedPoems = async (request: Request, response: Response) => {
       },
       isDraft: false
     };
-    
+
     let isSearchQuery = false;
 
     // Add search criteria if provided
@@ -1009,12 +1009,12 @@ export const getFeedPoems = async (request: Request, response: Response) => {
     // Add cursor if provided
     const queryWithCursor = cursor
       ? {
-          ...baseQuery,
-          cursor: {
-            id: cursor as string
-          },
-          skip: 1,
-        }
+        ...baseQuery,
+        cursor: {
+          id: cursor as string
+        },
+        skip: 1,
+      }
       : baseQuery;
 
     // Execute the query with pagination
@@ -1026,33 +1026,33 @@ export const getFeedPoems = async (request: Request, response: Response) => {
     // Determine if there are more results and the next cursor
     const hasMore = poems.length > finalLimit;
     const paginatedPoems = hasMore ? poems.slice(0, finalLimit) : poems;
-    
+
     // Set isOwner flag for each poem
     const poemsWithOwnership = paginatedPoems.map(poem => ({
       ...poem,
       isOwner: poem.userId === request.user.id
     }));
-    
+
     const nextCursor = hasMore ? paginatedPoems[paginatedPoems.length - 1].id : null;
 
     // Get total count for reference
     const totalCount = await prisma.poem.count({
       where: whereClause
     });
-    
+
     // Add search match information
     let poemsWithSearchMatches = poemsWithOwnership;
-    
+
     if (isSearchQuery && search) {
       const searchTerm = search.toString().trim().toLowerCase();
-      
+
       poemsWithSearchMatches = poemsWithOwnership.map(poem => {
         // Find matches in title
         const titleMatch = poem.title.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in username
         const usernameMatch = poem.user && poem.user.username.toLowerCase().includes(searchTerm);
-        
+
         // Find matches in stanzas
         const matchingStanzas = poem.stanzas
           .filter(stanza => stanza.body.toLowerCase().includes(searchTerm))
@@ -1060,16 +1060,16 @@ export const getFeedPoems = async (request: Request, response: Response) => {
             // Get a snippet of text around the match
             const stanzaText = stanza.body;
             const matchIndex = stanzaText.toLowerCase().indexOf(searchTerm);
-            
+
             // Get context around the match (up to 50 chars before and after)
             const startIndex = Math.max(0, matchIndex - 50);
             const endIndex = Math.min(stanzaText.length, matchIndex + searchTerm.length + 50);
             let snippet = stanzaText.substring(startIndex, endIndex);
-            
+
             // Add ellipsis if we trimmed the text
             if (startIndex > 0) snippet = '...' + snippet;
             if (endIndex < stanzaText.length) snippet = snippet + '...';
-            
+
             return {
               id: stanza.id,
               position: stanza.position,
@@ -1077,7 +1077,7 @@ export const getFeedPoems = async (request: Request, response: Response) => {
               matchIndex: matchIndex - startIndex + (startIndex > 0 ? 3 : 0) // Adjust for ellipsis
             };
           });
-        
+
         return {
           ...poem,
           searchMatches: {

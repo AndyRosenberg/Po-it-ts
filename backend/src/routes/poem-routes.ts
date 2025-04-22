@@ -1,12 +1,12 @@
 import express from 'express';
 import { protectRoute } from '../middleware/protect-route.js';
-import { 
-  createPoem, 
-  createStanza, 
+import {
+  createPoem,
+  createStanza,
   deletePoem,
-  deleteStanza, 
+  deleteStanza,
   getAllPoems,
-  getPoemById, 
+  getPoemById,
   getMyPoemById,
   getMyPoems,
   getFeedPoems,

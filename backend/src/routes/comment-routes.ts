@@ -1,9 +1,9 @@
 import express from "express";
-import { 
-  createComment, 
-  getComments, 
-  updateComment, 
-  deleteComment 
+import {
+  createComment,
+  getComments,
+  updateComment,
+  deleteComment
 } from "../controllers/comments-controller.js";
 import { protectRoute } from "../middleware/protect-route.js";
 

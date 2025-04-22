@@ -7,7 +7,7 @@ interface DecodedToken extends JwtPayload {
   userId: string;
 }
 
-export const protectRoute = async (request: Request, response: Response, next: NextFunction) => {
+export const protectRoute = async(request: Request, response: Response, next: NextFunction) => {
   const unauthorizedResponse = () => response.status(401).json({ error: "Unauthorized" });
 
   try {
@@ -23,7 +23,7 @@ export const protectRoute = async (request: Request, response: Response, next: N
       return unauthorizedResponse();
     }
 
-    const user = await prisma.user.findUnique({ 
+    const user = await prisma.user.findUnique({
       where: { id: decodedToken.userId },
       select: { id: true, username: true, email: true, profilePic: true }
     });
@@ -35,7 +35,7 @@ export const protectRoute = async (request: Request, response: Response, next: N
     request.user = user;
 
     next();
-  } catch (error: any) {
+  } catch (_error: any) {
     response.status(500).json({ error: "Internal Server Error" });
   }
 }
