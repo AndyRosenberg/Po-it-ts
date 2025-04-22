@@ -38,7 +38,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setPathHistory(prev => {
           if (prev[prev.length - 1] !== fullPath) {
             const newHistory = [...prev, fullPath];
-            return newHistory.slice(-30);
+            return newHistory.slice(-5);
           }
           return prev;
         });

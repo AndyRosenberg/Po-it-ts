@@ -26,7 +26,7 @@ export const BackButton = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { authUser } = useAuthContext();
-  const { previousPath, pathHistory } = useNavigation();
+  const { previousPath } = useNavigation();
   const queryClient = useQueryClient();
 
   const handleGoBack = () => {
@@ -113,8 +113,6 @@ export const BackButton = ({
       }
     }
 
-    // Check if previous path was an edit or create page
-    console.log(isCreateOrEditPage(previousPath), pathHistory)
     if (isCreateOrEditPage(previousPath)) {
       // Don't go back to create or edit pages
       navigate(fallbackPath);
