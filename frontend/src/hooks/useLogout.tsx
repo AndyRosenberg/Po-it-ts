@@ -8,6 +8,9 @@ export const useLogout = () => {
 
   const { mutate: logout, isPending: isLoading, error } = useMutation({
     mutationFn: async() => {
+      setAuthUser(null);
+      queryClient.clear();
+      
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
         method: "POST",
         credentials: 'include'
@@ -20,10 +23,6 @@ export const useLogout = () => {
       }
 
       return data;
-    },
-    onSuccess: () => {
-      setAuthUser(null);
-      queryClient.clear(); // Clear all query cache on logout
     },
     onError: (error: Error) => {
       console.error(error.message);

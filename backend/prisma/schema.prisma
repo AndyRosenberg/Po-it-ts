@@ -26,6 +26,7 @@ model User {
   updatedAt DateTime @updatedAt
   resetPasswordToken String? 
   resetPasswordExpires DateTime?
+  refreshToken String?
 
   poems Poem[]
   comments Comment[]

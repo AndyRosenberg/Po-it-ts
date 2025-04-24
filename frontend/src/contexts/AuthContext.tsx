@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "../utils/api";
 
 export type UserType = {
   id: string;
@@ -27,19 +28,15 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     queryKey: ["auth-user"],
     queryFn: async() => {
       try {
-        const meResponse = await fetch(`${process.env.HOST_DOMAIN}/api/auth/me`, {
-          method: 'GET',
-          credentials: 'include',
+        // Use apiRequest which handles token refresh automatically
+        return await apiRequest(`${process.env.HOST_DOMAIN}/api/auth/me`, {
+          method: 'GET'
         });
-        const data = await meResponse.json();
-
-        if (!meResponse.ok) {
-          throw new Error(data.error);
-        }
-
-        return data;
-      } catch (error: unknown) {
-        if (error instanceof Error) {
+      } catch (error) {
+        // If it's a specific authentication error after refresh attempt failed
+        if (error instanceof Error && error.message === 'Authentication expired') {
+          console.log('Session expired, please log in again');
+        } else if (error instanceof Error) {
           console.error(error.message);
         } else {
           console.error('An unknown error occurred');

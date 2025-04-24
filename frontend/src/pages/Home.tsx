@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { useFeedPoems } from "../hooks/usePoems";
 import { Header } from "../components/Header";
 import { PoemCard } from "../components/PoemCard";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 export const Home = () => {
   useAuthRedirect();
+  const { authUser } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
@@ -77,21 +79,23 @@ export const Home = () => {
         {/* Header */}
         <Header label="Feed" navLinkPath="/explore" navLinkLabel="Explore" />
 
-        {/* Search */}
-        <div className="relative mb-8">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
+        {/* Search - only show when user is loaded */}
+        {authUser && (
+          <div className="relative mb-8">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search poems..."
+              className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search poems..."
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-100 placeholder:text-slate-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        )}
 
         {/* Error display */}
         {error && (
@@ -102,10 +106,14 @@ export const Home = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Loading state */}
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+          {/* Loading state - larger spinner when auth is loading */}
+          {!authUser ? (
+            <div className="flex flex-col justify-center items-center h-[70vh]">
+              <div className="animate-spin rounded-full h-20 w-20 border-t-3 border-b-3 border-cyan-500"></div>
+            </div>
+          ) : isLoading ? (
+            <div className="flex flex-col justify-center items-center h-[60vh]">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
             </div>
           ) : poems.length === 0 ? (
             /* Empty state */

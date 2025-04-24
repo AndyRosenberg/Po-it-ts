@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 interface Stanza {
   id: string;
@@ -69,17 +70,11 @@ export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
         url.searchParams.append('search', searchQuery);
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch poems');
+      try {
+        return await apiRequest(url.toString(), { method: 'GET' }) as PaginatedResponse;
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch poems');
       }
-
-      return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor || undefined;
@@ -127,17 +122,11 @@ export const useFeedPoems = (pageSize = 10, searchQuery?: string) => {
         url.searchParams.append('search', searchQuery);
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch poems');
+      try {
+        return await apiRequest(url.toString(), { method: 'GET' }) as PaginatedResponse;
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch poems');
       }
-
-      return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor || undefined;
@@ -185,17 +174,11 @@ export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
         url.searchParams.append('search', searchQuery);
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch poems');
+      try {
+        return await apiRequest(url.toString(), { method: 'GET' }) as PaginatedResponse;
+      } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'Failed to fetch poems');
       }
-
-      return await response.json() as PaginatedResponse;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor || undefined;

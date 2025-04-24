@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../db/prisma.js';
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
-import { expireToken, generateToken } from '../utils/generate-token.js';
+import { expireTokens, generateTokens, generateAccessToken } from '../utils/generate-token.js';
 import { sendPasswordResetEmail } from '../utils/email-service.js';
 import { isValidEmail } from '../utils/validation.js';
 
@@ -61,13 +61,13 @@ export const signup = async(request: Request, response: Response) => {
     })
 
     if (newUser) {
-      generateToken(newUser.id, request, response);
+      await generateTokens(newUser.id, request, response);
 
       response.status(201).json({
         id: newUser.id,
         email: newUser.email,
         username: newUser.username,
-        profilePice: newUser.profilePic
+        profilePic: newUser.profilePic
       });
     } else {
       response.status(400).json({ error: "Invalid data" });
@@ -102,7 +102,7 @@ export const login = async(request: Request, response: Response) => {
       return invalidCredentials();
     }
 
-    generateToken(user.id, request, response);
+    await generateTokens(user.id, request, response);
 
     response.status(200).json({
       id: user.id,
@@ -117,7 +117,8 @@ export const login = async(request: Request, response: Response) => {
 }
 export const logout = async(request: Request, response: Response) => {
   try {
-    expireToken(request, response);
+    const userId = request.user?.id;
+    await expireTokens(userId, request, response);
     response.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
     console.log("Error in logout action", error.message);
@@ -173,6 +174,54 @@ export const forgotPassword = async(request: Request, response: Response) => {
     response.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
+export const refreshAccessToken = async(request: Request, response: Response) => {
+  try {
+    // Get the refresh token from the cookie
+    const refreshToken = request.cookies.refresh;
+    
+    if (!refreshToken) {
+      return response.status(401).json({ error: "Refresh token not found" });
+    }
+    
+    // Find user with this refresh token
+    const user = await prisma.user.findFirst({
+      where: { refreshToken },
+    });
+    
+    if (!user) {
+      return response.status(401).json({ error: "Invalid refresh token" });
+    }
+    
+    // Generate new access token
+    const accessToken = generateAccessToken(user.id);
+    
+    // Set the new access token in a cookie
+    const sameSiteValue = request.get('Origin') === process.env.TRUSTED_ORIGIN ? 'none' : 'strict';
+    response.cookie("jwt", accessToken, {
+      maxAge: 3600000, // 1 hour
+      httpOnly: true,
+      sameSite: sameSiteValue,
+      secure: true
+    });
+    
+    // Return success
+    response.status(200).json({ 
+      message: "Access token refreshed successfully",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        profilePic: user.profilePic
+      }
+    });
+    
+  } catch (error: any) {
+    console.log("Error in refreshAccessToken action", error.message);
+    response.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 export const resetPassword = async(request: Request, response: Response) => {
   try {
