@@ -8,7 +8,7 @@ import { useAuthContext } from "../hooks/useAuthContext";
 
 export const PublicPoems = () => {
   useAuthRedirect();
-  const { authUser } = useAuthContext();
+  const { authUser, isLoading: isAuthLoading } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
@@ -103,12 +103,12 @@ export const PublicPoems = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Loading state - larger spinner when auth is loading */}
-          {!authUser ? (
+          {/* Combined loading state for auth and initial poem loading */}
+          {isAuthLoading || (!authUser && isLoading) ? (
             <div className="flex flex-col justify-center items-center h-[70vh]">
               <div className="animate-spin rounded-full h-20 w-20 border-t-3 border-b-3 border-cyan-500"></div>
             </div>
-          ) : isLoading ? (
+          ) : authUser && isLoading ? (
             <div className="flex flex-col justify-center items-center h-[60vh]">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
             </div>

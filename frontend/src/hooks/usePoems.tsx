@@ -60,6 +60,7 @@ export const useMyPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['my-poems', pageSize, searchQuery],
+    staleTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/my-poems`);
       url.searchParams.append('limit', pageSize.toString());
@@ -112,6 +113,7 @@ export const useFeedPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['feed', pageSize, searchQuery],
+    staleTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/feed`);
       url.searchParams.append('limit', pageSize.toString());
@@ -164,6 +166,7 @@ export const usePublicPoems = (pageSize = 10, searchQuery?: string) => {
     refetch
   } = useInfiniteQuery({
     queryKey: ['public-poems', pageSize, searchQuery],
+    staleTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async({ pageParam = '' }) => {
       const url = new URL(`${process.env.HOST_DOMAIN}/api/poems`);
       url.searchParams.append('limit', pageSize.toString());

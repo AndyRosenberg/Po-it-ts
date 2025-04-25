@@ -13,12 +13,16 @@ interface AuthContextParams {
   authUser: UserType;
   setAuthUser: (user: UserType) => void;
   isLoading: boolean;
+  logoutAndNavigate: (navigate: (path: string) => void) => void;
+  loginAndNavigate: (userData: UserType, navigate: (path: string) => void) => void;
 }
 
 export const AuthContext = createContext<AuthContextParams>({
   authUser: null,
   setAuthUser: () => {},
   isLoading: true,
+  logoutAndNavigate: () => {},
+  loginAndNavigate: () => {},
 });
 
 export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
@@ -51,9 +55,32 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const setAuthUser = (user: UserType) => {
     queryClient.setQueryData(["auth-user"], user);
   };
+  
+  // Add utilities to handle auth navigation properly
+  const logoutAndNavigate = (navigate: (path: string) => void) => {
+    // Set auth user to null first
+    setAuthUser(null);
+    // Clear all queries in the cache
+    queryClient.clear();
+    // Navigate to login page
+    navigate('/login');
+  };
+  
+  const loginAndNavigate = (userData: UserType, navigate: (path: string) => void) => {
+    // Set the auth user data first
+    setAuthUser(userData);
+    // Navigate to home page
+    navigate('/');
+  };
 
   return (
-    <AuthContext.Provider value={{ authUser: authUser || null, setAuthUser, isLoading }}>
+    <AuthContext.Provider value={{ 
+      authUser: authUser || null, 
+      setAuthUser, 
+      isLoading,
+      logoutAndNavigate,
+      loginAndNavigate
+    }}>
       {children}
     </AuthContext.Provider>
   );

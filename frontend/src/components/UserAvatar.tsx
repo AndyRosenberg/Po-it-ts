@@ -9,7 +9,7 @@ type UserAvatarProps = {
 };
 
 export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
-  const { authUser: user } = useAuthContext();
+  const { authUser: user, logoutAndNavigate } = useAuthContext();
   const { logout } = useLogout();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -31,9 +31,13 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
   }, []);
 
   const handleLogout = async() => {
-    await logout();
     setIsOpen(false);
-    navigate("/login");
+    
+    // Use the proper logout flow from AuthContext
+    logoutAndNavigate(navigate);
+    
+    // Call the API to logout (clean up server-side)
+    logout();
   };
 
   return (

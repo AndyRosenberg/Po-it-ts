@@ -9,7 +9,7 @@ export type LoginInputs = {
 }
 
 export const useLogin = () => {
-  const { setAuthUser } = useAuthContext();
+  const { loginAndNavigate } = useAuthContext();
   const navigate = useNavigate();
 
   const { mutateAsync: login, isPending: loading } = useMutation({
@@ -39,19 +39,8 @@ export const useLogin = () => {
       }
     },
     onSuccess: (data) => {
-      
-      // Update auth user state
-      setAuthUser(data);
-      
-      // Force a longer delay before navigation to ensure auth context is updated and persisted
-      setTimeout(() => {
-        navigate("/");
-        
-        // After navigation, invalidate queries to refresh data
-        setTimeout(() => {
-          window.location.reload(); // Force a full refresh to ensure everything is up to date
-        }, 100);
-      }, 500);
+      // Use the new login flow from AuthContext
+      loginAndNavigate(data, navigate);
     },
     onError: (error: Error) => {
       console.error("Login error:", error.message);
