@@ -6,10 +6,10 @@ export const useAuthRedirect = (authedRoute?: string) => {
   const { authUser, isLoading } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Add debugging to see what's happening
   useEffect(() => {
-    
+
     if (!isLoading) {
       if (!authUser && !authedRoute?.length && location.pathname !== '/login' && location.pathname !== '/signup') {
         // Only redirect to login if we're not already on a login/signup page

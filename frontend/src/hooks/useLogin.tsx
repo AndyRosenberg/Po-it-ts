@@ -14,29 +14,25 @@ export const useLogin = () => {
 
   const { mutateAsync: login, isPending: loading } = useMutation({
     mutationFn: async(inputs: LoginInputs) => {
-      try {
-        const response = await fetch(
-          `${process.env.HOST_DOMAIN}/api/auth/login`,
-          {
-            method: "POST",
-            credentials: 'include',
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(inputs)
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error);
+      const response = await fetch(
+        `${process.env.HOST_DOMAIN}/api/auth/login`,
+        {
+          method: "POST",
+          credentials: 'include',
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(inputs)
         }
+      );
 
-        return data;
-      } catch (error) {
-        throw error; // Re-throw to be handled by onError
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
       }
+
+      return data;
     },
     onSuccess: (data) => {
       // Use the new login flow from AuthContext

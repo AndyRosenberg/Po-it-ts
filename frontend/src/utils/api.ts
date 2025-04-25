@@ -11,7 +11,7 @@ export const apiRequest = async(url: string, options: RequestInit = {}) => {
   try {
     // Skip token refresh for auth-related paths
     const isAuthPath = url.includes('/api/auth/');
-    
+
     // Make the initial request
     let response = await fetch(url, fetchOptions);
 

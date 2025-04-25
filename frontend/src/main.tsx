@@ -18,24 +18,24 @@ const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
       },
     },
   })
-  
+
   // Pre-fetch auth status when the app starts
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async() => {
       try {
         await queryClient.prefetchQuery({
           queryKey: ["auth-user"],
-          queryFn: async () => {
+          queryFn: async() => {
             try {
               const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/me`, {
                 method: 'GET',
                 credentials: 'include',
               });
-              
+
               if (!response.ok) {
                 return null;
               }
-              
+
               const userData = await response.json();
               return userData;
             } catch (error) {
@@ -48,10 +48,10 @@ const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
         console.error("Authentication prefetch error:", error);
       }
     };
-    
+
     checkAuth();
   }, []);
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>

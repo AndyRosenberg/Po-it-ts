@@ -11,17 +11,18 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import UserProfile from "./pages/UserProfile";
 import { useAuthContext } from "./hooks/useAuthContext";
+import { JSX } from "react";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { authUser, isLoading } = useAuthContext();
-  
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
     </div>;
   }
-  
+
   if (!authUser) {
     return <Navigate to="/login" replace />;
   }
@@ -37,7 +38,7 @@ export const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      
+
       {/* Protected routes */}
       <Route path="/" element={
         <ProtectedRoute>

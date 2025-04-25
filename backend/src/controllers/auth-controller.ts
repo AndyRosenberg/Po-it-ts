@@ -103,7 +103,7 @@ export const login = async(request: Request, response: Response) => {
     }
 
     await generateTokens(user.id, request, response);
-    
+
 
     response.status(200).json({
       id: user.id,

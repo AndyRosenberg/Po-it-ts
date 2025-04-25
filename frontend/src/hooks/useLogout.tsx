@@ -8,22 +8,18 @@ export const useLogout = () => {
 
   const { mutate: logout, isPending: isLoading, error } = useMutation({
     mutationFn: async() => {
-      try {
-        const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
-          method: "POST",
-          credentials: 'include'
-        });
+      const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
+        method: "POST",
+        credentials: 'include'
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error);
-        }
-
-        return data;
-      } catch (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(data.error);
       }
+
+      return data;
     },
     onSuccess: () => {
       // Clear auth user

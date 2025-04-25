@@ -32,10 +32,10 @@ export const UserAvatar = ({ highlight = false }: UserAvatarProps) => {
 
   const handleLogout = async() => {
     setIsOpen(false);
-    
+
     // Use the proper logout flow from AuthContext
     logoutAndNavigate(navigate);
-    
+
     // Call the API to logout (clean up server-side)
     logout();
   };

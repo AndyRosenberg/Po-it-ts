@@ -38,9 +38,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         });
         return userData;
       } catch (error) {
-        // If it's a specific authentication error after refresh attempt failed
-        if (error instanceof Error && error.message === 'Authentication expired') {
-        } else if (error instanceof Error) {
+        if (error instanceof Error) {
           console.error(error.message);
         } else {
           console.error('An unknown error occurred');
@@ -55,7 +53,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const setAuthUser = (user: UserType) => {
     queryClient.setQueryData(["auth-user"], user);
   };
-  
+
   // Add utilities to handle auth navigation properly
   const logoutAndNavigate = (navigate: (path: string) => void) => {
     // Set auth user to null first
@@ -65,7 +63,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     // Navigate to login page
     navigate('/login');
   };
-  
+
   const loginAndNavigate = (userData: UserType, navigate: (path: string) => void) => {
     // Set the auth user data first
     setAuthUser(userData);
@@ -74,9 +72,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      authUser: authUser || null, 
-      setAuthUser, 
+    <AuthContext.Provider value={{
+      authUser: authUser || null,
+      setAuthUser,
       isLoading,
       logoutAndNavigate,
       loginAndNavigate
