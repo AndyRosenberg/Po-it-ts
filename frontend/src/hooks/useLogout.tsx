@@ -10,7 +10,7 @@ export const useLogout = () => {
     mutationFn: async() => {
       setAuthUser(null);
       queryClient.clear();
-      
+
       const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
         method: "POST",
         credentials: 'include'

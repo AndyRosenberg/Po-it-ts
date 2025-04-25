@@ -20,7 +20,7 @@ export const protectRoute = async(request: Request, response: Response, next: Ne
     try {
       // Verify JWT token
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
-      
+
       const user = await prisma.user.findUnique({
         where: { id: decodedToken.userId },
         select: { id: true, username: true, email: true, profilePic: true }
@@ -32,7 +32,7 @@ export const protectRoute = async(request: Request, response: Response, next: Ne
 
       request.user = user;
       next();
-      
+
     } catch (jwtError) {
       // If JWT verification fails, it's likely expired or invalid
       if (jwtError instanceof jwt.TokenExpiredError) {

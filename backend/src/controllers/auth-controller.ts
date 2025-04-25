@@ -180,23 +180,23 @@ export const refreshAccessToken = async(request: Request, response: Response) =>
   try {
     // Get the refresh token from the cookie
     const refreshToken = request.cookies.refresh;
-    
+
     if (!refreshToken) {
       return response.status(401).json({ error: "Refresh token not found" });
     }
-    
+
     // Find user with this refresh token
     const user = await prisma.user.findFirst({
       where: { refreshToken },
     });
-    
+
     if (!user) {
       return response.status(401).json({ error: "Invalid refresh token" });
     }
-    
+
     // Generate new access token
     const accessToken = generateAccessToken(user.id);
-    
+
     // Set the new access token in a cookie
     const sameSiteValue = request.get('Origin') === process.env.TRUSTED_ORIGIN ? 'none' : 'strict';
     response.cookie("jwt", accessToken, {
@@ -205,9 +205,9 @@ export const refreshAccessToken = async(request: Request, response: Response) =>
       sameSite: sameSiteValue,
       secure: true
     });
-    
+
     // Return success
-    response.status(200).json({ 
+    response.status(200).json({
       message: "Access token refreshed successfully",
       user: {
         id: user.id,
@@ -216,7 +216,7 @@ export const refreshAccessToken = async(request: Request, response: Response) =>
         profilePic: user.profilePic
       }
     });
-    
+
   } catch (error: any) {
     console.log("Error in refreshAccessToken action", error.message);
     response.status(500).json({ error: "Internal Server Error" });

@@ -176,6 +176,13 @@ export const deletePoem = async(request: Request, response: Response) => {
       where: {
         id: poemId,
         userId: request.user.id
+      },
+      include: {
+        stanzas: {
+          select: {
+            id: true
+          }
+        }
       }
     });
 
@@ -183,18 +190,44 @@ export const deletePoem = async(request: Request, response: Response) => {
       return response.status(404).json({ error: "Poem not found" });
     }
 
-    // Delete all stanzas first (will cascade, but doing it explicitly for clarity)
-    await prisma.stanza.deleteMany({
-      where: {
-        poemId
-      }
-    });
+    // Extract stanza IDs
+    const stanzaIds = poem.stanzas.map(stanza => stanza.id);
 
-    // Delete the poem
-    await prisma.poem.delete({
-      where: {
-        id: poemId
+    // Start a transaction to ensure all operations succeed or fail together
+    await prisma.$transaction(async(tx) => {
+      // 1. First, delete all comments on the poem's stanzas
+      if (stanzaIds.length > 0) {
+        await tx.comment.deleteMany({
+          where: {
+            commentableType: "Stanza",
+            commentableId: {
+              in: stanzaIds
+            }
+          }
+        });
       }
+
+      // 2. Delete all pins for this poem
+      await tx.collection.deleteMany({
+        where: {
+          collectableType: "Poem",
+          collectableId: poemId
+        }
+      });
+
+      // 3. Delete all stanzas
+      await tx.stanza.deleteMany({
+        where: {
+          poemId
+        }
+      });
+
+      // 4. Finally, delete the poem itself
+      await tx.poem.delete({
+        where: {
+          id: poemId
+        }
+      });
     });
 
     response.status(204).send();

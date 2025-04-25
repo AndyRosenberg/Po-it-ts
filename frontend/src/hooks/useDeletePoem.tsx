@@ -17,7 +17,7 @@ export const useDeletePoem = () => {
       await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
         method: 'DELETE',
       });
-      
+
       return true;
     },
     onSuccess: () => {

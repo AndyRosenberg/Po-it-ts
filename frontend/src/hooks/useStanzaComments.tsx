@@ -3,7 +3,6 @@ import { apiRequest } from '../utils/api';
 
 interface Stanza {
   id: string;
-  [key: string]: any;
 }
 
 export const useStanzaComments = () => {
@@ -20,12 +19,15 @@ export const useStanzaComments = () => {
         try {
           // Limit to 1 since we only need to know if any comments exist
           const responseData = await apiRequest(
-            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}?limit=1`, 
+            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}?limit=1`,
             { method: 'GET' }
           );
-          
+
           // Return the stanza ID and whether it has comments
-          return { id: stanza.id, hasComments: responseData.totalCount > 0 };
+          return {
+            id: stanza.id,
+            hasComments: responseData && responseData.totalCount ? responseData.totalCount > 0 : false
+          };
         } catch (error) {
           console.error('Error checking comments:', error);
           return { id: stanza.id, hasComments: false };
@@ -34,13 +36,13 @@ export const useStanzaComments = () => {
 
       // Wait for all comment checks to complete
       const results = await Promise.all(commentPromises);
-      
+
       // Convert the results to a record
       const commentsCheck = results.reduce<Record<string, boolean>>((acc, { id, hasComments }) => {
         acc[id] = hasComments;
         return acc;
       }, {});
-      
+
       setStanzasWithComments(commentsCheck);
     } catch (error) {
       console.error('Error checking stanza comments:', error);

@@ -137,7 +137,7 @@ export const useEditPoem = () => {
       await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'DELETE',
       });
-      
+
       return stanzaId;
     }
   });

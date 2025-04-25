@@ -19,11 +19,11 @@ export const useViewPoem = (poemId: string | undefined) => {
     refetch
   } = useQuery({
     queryKey: ['poem', poemId],
-    queryFn: async () => {
+    queryFn: async() => {
       if (!poemId) {
         throw new Error('Poem ID is required');
       }
-      
+
       try {
         return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
           method: 'GET',
@@ -38,7 +38,7 @@ export const useViewPoem = (poemId: string | undefined) => {
   return {
     poem,
     isLoading,
-    error: error instanceof Error ? error.message : 'An unknown error occurred',
+    error: error ? (error instanceof Error ? error.message : 'An unknown error occurred') : null,
     refetch
   };
 };
