@@ -29,13 +29,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     queryFn: async() => {
       try {
         // Use apiRequest which handles token refresh automatically
-        return await apiRequest(`${process.env.HOST_DOMAIN}/api/auth/me`, {
+        const userData = await apiRequest(`${process.env.HOST_DOMAIN}/api/auth/me`, {
           method: 'GET'
         });
+        return userData;
       } catch (error) {
         // If it's a specific authentication error after refresh attempt failed
         if (error instanceof Error && error.message === 'Authentication expired') {
-          console.log('Session expired, please log in again');
         } else if (error instanceof Error) {
           console.error(error.message);
         } else {

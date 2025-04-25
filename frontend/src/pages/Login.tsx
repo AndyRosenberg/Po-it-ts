@@ -1,17 +1,33 @@
-import { Link } from "react-router-dom";
-import { useAuthRedirect } from "../hooks/useAuthRedirect";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useLogin } from "../hooks/useLogin";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 export const Login = () => {
-  useAuthRedirect("/");
+  // Disable authRedirect for login page to avoid redirect loops
+  // The hook will still redirect to home if already logged in
+  const { authUser } = useAuthContext();
+  const navigate = useNavigate();
+  
+  // Manual redirect if already logged in
+  useEffect(() => {
+    if (authUser) {
+      navigate("/");
+    }
+  }, [authUser, navigate]);
 
   const [inputs, setInputs] = useState({ usernameOrEmail: "", password: "" });
   const { login, loading } = useLogin();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    login(inputs);
+    try {
+      await login(inputs);
+      // Navigation is now handled in the useLogin hook
+    } catch (error) {
+      console.error('Login error:', error);
+      // Error is handled in the login hook
+    }
   }
 
   return (

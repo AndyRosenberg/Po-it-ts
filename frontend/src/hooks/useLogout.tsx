@@ -8,21 +8,30 @@ export const useLogout = () => {
 
   const { mutate: logout, isPending: isLoading, error } = useMutation({
     mutationFn: async() => {
-      setAuthUser(null);
-      queryClient.clear();
+      try {
+        const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
+          method: "POST",
+          credentials: 'include'
+        });
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/auth/logout`, {
-        method: "POST",
-        credentials: 'include'
-      });
+        const data = await response.json();
 
-      const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error);
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error);
+        return data;
+      } catch (error) {
+        throw error;
       }
-
-      return data;
+    },
+    onSuccess: () => {
+      // Clear auth user
+      setAuthUser(null);
+      // Clear all query cache
+      queryClient.clear();
+      // Clear any localStorage items if used
+      localStorage.removeItem('lastLoginTime');
     },
     onError: (error: Error) => {
       console.error(error.message);

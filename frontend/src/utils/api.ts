@@ -9,11 +9,20 @@ export const apiRequest = async(url: string, options: RequestInit = {}) => {
   };
 
   try {
+    // Skip token refresh for auth-related paths
+    const isAuthPath = url.includes('/api/auth/');
+    
     // Make the initial request
     let response = await fetch(url, fetchOptions);
 
-    // If we get a 401 Unauthorized, the token might have expired
-    if (response.status === 401) {
+    // Special handling for login endpoint - don't try to refresh on 404 (invalid credentials)
+    if (url.includes('/api/auth/login') && response.status === 404) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Invalid credentials');
+    }
+
+    // If we get a 401 Unauthorized and it's not an auth endpoint, try to refresh the token
+    if (response.status === 401 && !isAuthPath) {
       // Try to refresh the token
       const refreshResponse = await fetch(`${process.env.HOST_DOMAIN}/api/auth/refresh`, {
         method: 'POST',
