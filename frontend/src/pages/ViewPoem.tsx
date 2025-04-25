@@ -1,128 +1,47 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useDeletePoem } from '../hooks/useDeletePoem';
-import { Poem } from '../hooks/usePoems';
+import { useViewPoem } from '../hooks/useViewPoem';
+import { useStanzaComments } from '../hooks/useStanzaComments';
 import { UserAvatar } from '../components/UserAvatar';
 import { BackButton } from '../components/BackButton';
 import { CommentDrawer } from '../components/CommentDrawer';
 import { ShareModal } from '../components/ShareModal';
 import PinButton from '../components/PinButton';
 
-interface ExtendedPoem extends Poem {
-  isOwner?: boolean;
-  user?: {
-    id: string;
-    username: string;
-    profilePic: string;
-  };
-}
-
 export const ViewPoem = () => {
   useAuthRedirect();
   const { poemId } = useParams<{ poemId: string }>();
   const navigate = useNavigate();
-  const [poem, setPoem] = useState<ExtendedPoem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { poem, isLoading, error } = useViewPoem(poemId);
   const { deletePoem, isLoading: isDeleting, error: deleteError } = useDeletePoem();
+  const { stanzasWithComments, checkStanzaComments } = useStanzaComments();
 
   // Comment drawer state
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
   const [selectedStanzaId, setSelectedStanzaId] = useState<string | null>(null);
   const [selectedStanzaText, setSelectedStanzaText] = useState('');
-  const [stanzasWithComments, setStanzasWithComments] = useState<Record<string, boolean>>({});
 
   // Share modal state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Function to check for comments in stanzas
-  const checkStanzaComments = useCallback(async(stanzas: {id: string}[]) => {
-    if (!stanzas || stanzas.length === 0) return;
-
-    const commentsCheck: Record<string, boolean> = {};
-
-    try {
-      // Create an array of promises for fetching comment status for each stanza
-      const commentPromises = stanzas.map(async(stanza) => {
-        try {
-          const commentResponse = await fetch(
-            // Limit to 1 since we only need to know if any comments exist
-            `${process.env.HOST_DOMAIN}/api/comments/Stanza/${stanza.id}?limit=1`,
-            {
-              method: 'GET',
-              credentials: 'include',
-            }
-          );
-
-          if (commentResponse.ok) {
-            // Handle the new pagination response format
-            const responseData = await commentResponse.json();
-            // Check if totalCount is greater than 0
-            commentsCheck[stanza.id] = responseData.totalCount > 0;
-          }
-        } catch (error) {
-          console.error('Error checking comments:', error);
-          commentsCheck[stanza.id] = false;
-        }
-      });
-
-      // Wait for all comment checks to complete
-      await Promise.all(commentPromises);
-      setStanzasWithComments(commentsCheck);
-    } catch (error) {
-      console.error('Error checking stanza comments:', error);
-    }
-  }, []);
-
+  // Check for stanza comments when poem data is loaded
   useEffect(() => {
-    const fetchPoem = async() => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to fetch poem');
-        }
-
-        const data = await response.json();
-        setPoem(data);
-
-        // Check stanza comments immediately after fetching the poem
-        if (data && data.stanzas && data.stanzas.length > 0) {
-          await checkStanzaComments(data.stanzas);
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unknown error occurred');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (poemId) {
-      fetchPoem();
+    if (poem && poem.stanzas && poem.stanzas.length > 0) {
+      checkStanzaComments(poem.stanzas);
     }
-  }, [poemId, checkStanzaComments]);
+  }, [poem, checkStanzaComments]);
 
   // Refresh comments after comment drawer closes (to update UI if new comments were added)
-  const handleCloseCommentsDrawer = useCallback(() => {
+  const handleCloseCommentsDrawer = () => {
     setIsCommentDrawerOpen(false);
 
     // Re-check for comments when the drawer closes (in case comments were added/removed)
     if (poem?.stanzas) {
       checkStanzaComments(poem.stanzas);
     }
-  }, [poem?.stanzas, checkStanzaComments]);
+  };
 
   const formattedDate = poem?.updatedAt
     ? new Date(poem.updatedAt).toLocaleDateString('en-US', {

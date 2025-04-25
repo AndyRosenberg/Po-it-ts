@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 export interface Collection {
   id: string;
@@ -47,17 +48,7 @@ export const useUserCollections = (userId: string, pageSize = 10, searchQuery?: 
         url.searchParams.append('search', searchQuery);
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch collections');
-      }
-
-      return await response.json() as PaginatedCollectionResponse;
+      return await apiRequest(url.toString()) as PaginatedCollectionResponse;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor || undefined;
@@ -88,17 +79,7 @@ export const usePoemPinsCount = (poemId: string) => {
   return useQuery({
     queryKey: ['poemPinsCount', poemId],
     queryFn: async() => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/pins-count`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch poem pins count');
-      }
-
-      const data = await response.json();
+      const data = await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/pins-count`);
       return data.count;
     },
   });
@@ -109,17 +90,7 @@ export const useIsPoemPinned = (poemId: string) => {
   return useQuery({
     queryKey: ['isPoemPinned', poemId],
     queryFn: async() => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/is-pinned`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to check if poem is pinned');
-      }
-
-      return await response.json();
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/is-pinned`);
     },
   });
 };
@@ -130,20 +101,12 @@ export const usePinPoem = () => {
 
   return useMutation({
     mutationFn: async(poemId: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/pin`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/pin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to pin poem');
-      }
-
-      return await response.json();
     },
     onSuccess: (_, poemId) => {
       queryClient.invalidateQueries({ queryKey: ['poemPinsCount', poemId] });
@@ -159,16 +122,10 @@ export const useUnpinPoem = () => {
 
   return useMutation({
     mutationFn: async({ pinId }: { pinId: string, poemId: string }) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/pins/${pinId}`, {
+      await apiRequest(`${process.env.HOST_DOMAIN}/api/pins/${pinId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok && response.status !== 204) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to unpin poem');
-      }
-
+      
       return true;
     },
     onSuccess: (_, variables) => {

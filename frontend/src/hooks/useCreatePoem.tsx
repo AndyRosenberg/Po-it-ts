@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Poem } from './usePoems';
+import { apiRequest } from '../utils/api';
 
 interface Stanza {
   id?: string;
@@ -22,20 +23,12 @@ export const useCreatePoem = () => {
   // Create a new poem
   const { mutateAsync: createPoem, isPending: isCreatingPoem } = useMutation({
     mutationFn: async() => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create poem');
-      }
-
-      return response.json();
     },
     onSuccess: (newPoem) => {
       setPoemId(newPoem.id);
@@ -58,24 +51,16 @@ export const useCreatePoem = () => {
         throw new Error('Failed to create poem');
       }
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           poemId: activePoemId,
           body,
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to add stanza');
-      }
-
-      return response.json();
     },
     onSuccess: (newStanza) => {
       setStanzas(prev => [...prev, newStanza]);
@@ -93,21 +78,13 @@ export const useCreatePoem = () => {
   // Update an existing stanza
   const { mutateAsync: updateStanza, isPending: isUpdatingStanza } = useMutation({
     mutationFn: async({ stanzaId, body }: { stanzaId: string, body: string }) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ body }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update stanza');
-      }
-
-      return response.json();
     },
     onSuccess: (updatedStanza) => {
       setStanzas(prev => prev.map(stanza =>
@@ -126,16 +103,10 @@ export const useCreatePoem = () => {
   // Delete a stanza
   const { mutateAsync: deleteStanza, isPending: isDeletingStanza } = useMutation({
     mutationFn: async(stanzaId: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
+      await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete stanza');
-      }
-
+      
       return stanzaId;
     },
     onSuccess: (stanzaId) => {
@@ -170,21 +141,13 @@ export const useCreatePoem = () => {
         throw new Error('Failed to create poem for title update');
       }
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${activePoemId}/title`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${activePoemId}/title`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ title }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update title');
-      }
-
-      return response.json();
     },
     onSuccess: (updatedPoem: Poem) => {
       setPoemTitle(updatedPoem.title);
@@ -207,20 +170,12 @@ export const useCreatePoem = () => {
   // Publish poem (mark as not a draft)
   const { mutateAsync: publishPoem, isPending: isPublishing } = useMutation({
     mutationFn: async(id: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${id}/publish`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${id}/publish`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to publish poem');
-      }
-
-      return response.json();
     }
   });
 

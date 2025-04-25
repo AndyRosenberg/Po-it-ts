@@ -1,4 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 interface User {
   id: string;
@@ -21,16 +22,7 @@ export const useUserProfile = (userId: string | undefined) => {
     queryFn: async() => {
       if (!userId) return null;
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/users/${userId}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch user');
-      }
-
-      return await response.json() as User;
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/users/${userId}`) as User;
     },
     enabled: !!userId
   });
@@ -63,16 +55,7 @@ export const useUserPoems = (userId: string | undefined, pageSize = 10, searchQu
 
       // Fetch poems using constructed URL
 
-      const response = await fetch(url, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch user poems');
-      }
-
-      return await response.json();
+      return await apiRequest(url.toString());
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor || undefined;

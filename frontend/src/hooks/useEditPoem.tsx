@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { arrayMove } from '@dnd-kit/sortable';
 import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 interface Stanza {
   id?: string;
@@ -37,18 +38,7 @@ export const useEditPoem = () => {
     queryFn: async() => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch poem');
-      }
-
-      const poemData = await response.json();
-      return poemData as Poem;
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`) as Poem;
     }
   });
 
@@ -77,24 +67,16 @@ export const useEditPoem = () => {
     mutationFn: async(body: string) => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           poemId,
           body,
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to add stanza');
-      }
-
-      return response.json();
     }
   });
 
@@ -120,21 +102,13 @@ export const useEditPoem = () => {
   // Update an existing stanza
   const { mutateAsync: updateStanza, isPending: isUpdatingStanza } = useMutation({
     mutationFn: async({ stanzaId, body }: { stanzaId: string, body: string }) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ body }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update stanza');
-      }
-
-      return response.json();
     }
   });
 
@@ -160,16 +134,10 @@ export const useEditPoem = () => {
   // Delete a stanza
   const { mutateAsync: deleteStanza, isPending: isDeletingStanza } = useMutation({
     mutationFn: async(stanzaId: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
+      await apiRequest(`${process.env.HOST_DOMAIN}/api/stanzas/${stanzaId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete stanza');
-      }
-
+      
       return stanzaId;
     }
   });
@@ -201,21 +169,13 @@ export const useEditPoem = () => {
     mutationFn: async(stanzaIds: string[]) => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/reorder`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/reorder`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ stanzaIds }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to reorder stanzas');
-      }
-
-      return response.json();
     }
   });
 
@@ -262,21 +222,13 @@ export const useEditPoem = () => {
     mutationFn: async(title: string) => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/title`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/title`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ title }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update title');
-      }
-
-      return response.json();
     }
   });
 
@@ -306,20 +258,12 @@ export const useEditPoem = () => {
     mutationFn: async() => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/publish`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/publish`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to publish poem');
-      }
-
-      return response.json();
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
@@ -377,20 +321,12 @@ export const useEditPoem = () => {
     mutationFn: async() => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/draft`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}/draft`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to convert poem to draft');
-      }
-
-      return response.json();
     },
     onSuccess: (data) => {
       // Invalidate all relevant queries

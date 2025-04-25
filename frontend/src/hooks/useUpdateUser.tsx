@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuthContext } from './useAuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 type UpdateUserData = {
   username?: string;
@@ -20,22 +21,13 @@ export const useUpdateUser = () => {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/users/update`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/users/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(userData),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      return data;
     },
     onSuccess: (data) => {
       setAuthUser(data);

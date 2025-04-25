@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from './useAuthContext';
+import { apiRequest } from '../utils/api';
 
 export interface Comment {
   id: string;
@@ -45,17 +46,7 @@ export const useComments = (commentableType: string, commentableId: string) => {
         url += `&cursor=${cursor}`;
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch comments');
-      }
-
-      const data: CommentResponse = await response.json();
+      const data: CommentResponse = await apiRequest(url);
 
       if (append) {
         setComments(prev => [...prev, ...data.comments]);
@@ -83,25 +74,17 @@ export const useComments = (commentableType: string, commentableId: string) => {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/comments`, {
+      const newComment = await apiRequest(`${process.env.HOST_DOMAIN}/api/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           body,
           commentableType,
           commentableId
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to add comment');
-      }
-
-      const newComment = await response.json();
 
       // Add the new comment at the top of the list (newest first)
       setComments(prevComments => [newComment, ...prevComments]);
@@ -128,21 +111,13 @@ export const useComments = (commentableType: string, commentableId: string) => {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/comments/${commentId}`, {
+      const updatedComment = await apiRequest(`${process.env.HOST_DOMAIN}/api/comments/${commentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ body }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update comment');
-      }
-
-      const updatedComment = await response.json();
 
       setComments(prevComments =>
         prevComments.map(comment =>
@@ -168,15 +143,9 @@ export const useComments = (commentableType: string, commentableId: string) => {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/comments/${commentId}`, {
+      await apiRequest(`${process.env.HOST_DOMAIN}/api/comments/${commentId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete comment');
-      }
 
       // Filter comments first to get the new count
       const filteredComments = (prevComments: Comment[]) =>

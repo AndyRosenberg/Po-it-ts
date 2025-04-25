@@ -3,6 +3,7 @@ import { useAuthContext } from './useAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { apiRequest } from '../utils/api';
 
 export const useDeleteAccount = () => {
   const [error, setError] = useState<string | null>(null);
@@ -14,22 +15,13 @@ export const useDeleteAccount = () => {
     mutationFn: async(password: string) => {
       setError(null);
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/users/delete`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/users/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ password }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      return data;
     },
     onSuccess: () => {
       // Pre-navigate cleanup

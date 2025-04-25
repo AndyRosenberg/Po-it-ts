@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../utils/api';
 
 export interface User {
   id: string;
@@ -13,17 +14,7 @@ export const useFollowers = (userId?: string) => {
     queryFn: async() => {
       if (!userId) return [];
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/followers/${userId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch followers');
-      }
-
-      return await response.json() as User[];
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/follows/followers/${userId}`) as User[];
     },
     enabled: !!userId
   });
@@ -36,17 +27,7 @@ export const useFollowing = (userId?: string) => {
     queryFn: async() => {
       if (!userId) return [];
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/following/${userId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch following');
-      }
-
-      return await response.json() as User[];
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/follows/following/${userId}`) as User[];
     },
     enabled: !!userId
   });
@@ -59,17 +40,7 @@ export const useCheckFollowing = (userId: string | undefined) => {
     queryFn: async() => {
       if (!userId) return false;
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/check/${userId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to check following status');
-      }
-
-      const data = await response.json();
+      const data = await apiRequest(`${process.env.HOST_DOMAIN}/api/follows/check/${userId}`);
       return data.isFollowing;
     },
     enabled: !!userId
@@ -83,17 +54,9 @@ export const useFollowActions = () => {
   // Follow a user
   const followMutation = useMutation({
     mutationFn: async(userId: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
         method: 'POST',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to follow user');
-      }
-
-      return await response.json();
     },
     onSuccess: (_, userId) => {
       // Invalidate relevant queries
@@ -106,17 +69,9 @@ export const useFollowActions = () => {
   // Unfollow a user
   const unfollowMutation = useMutation({
     mutationFn: async(userId: string) => {
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
+      return await apiRequest(`${process.env.HOST_DOMAIN}/api/follows/${userId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to unfollow user');
-      }
-
-      return await response.json();
     },
     onSuccess: (_, userId) => {
       // Invalidate relevant queries

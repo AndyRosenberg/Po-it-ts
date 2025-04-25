@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isCreateOrEditPage } from '../components/BackButton';
 import { useNavigation } from '../contexts/NavigationContext';
+import { apiRequest } from '../utils/api';
 
 export const useDeletePoem = () => {
   const navigate = useNavigate();
@@ -13,16 +14,10 @@ export const useDeletePoem = () => {
     mutationFn: async(poemId: string) => {
       if (!poemId) throw new Error('Poem ID is required');
 
-      const response = await fetch(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
+      await apiRequest(`${process.env.HOST_DOMAIN}/api/poems/${poemId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete poem');
-      }
-
+      
       return true;
     },
     onSuccess: () => {
