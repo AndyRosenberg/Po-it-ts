@@ -112,7 +112,7 @@ export const Login = () => {
       </div>
 
       {/* Example Poem */}
-      <div className="md:block w-full max-w-md mx-auto h-full flex items-center content-center">
+      <div className="hidden md:block w-full max-w-md mx-auto h-full flex items-center content-center">
         <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden p-8 relative w-full">
           <div className="absolute top-4 right-4 text-cyan-400/30">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 opacity-50">
