@@ -23,6 +23,7 @@ CREATE TABLE "poems" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
+    "isDraft" BOOLEAN NOT NULL DEFAULT 'TRUE',
 
     CONSTRAINT "poems_pkey" PRIMARY KEY ("id")
 );
@@ -90,7 +91,3 @@ ALTER TABLE "_UserFollows" ADD CONSTRAINT "_UserFollows_A_fkey" FOREIGN KEY ("A"
 -- AddForeignKey
 ALTER TABLE "_UserFollows" ADD CONSTRAINT "_UserFollows_B_fkey" FOREIGN KEY ("B") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Add indexes to speed up fuzzy searches
-CREATE INDEX IF NOT EXISTS idx_poem_title_trgm ON poems USING gin (title gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_stanza_body_trgm ON stanzas USING gin (body gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_user_username_trgm ON users USING gin (username gin_trgm_ops);

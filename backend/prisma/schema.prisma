@@ -31,10 +31,12 @@ model User {
   poems Poem[]
   comments Comment[]
   collections Collection[]
-  
+  notifications Notification[]
+
   // Self-relation for follows
   following User[] @relation("UserFollows")
   followers User[] @relation("UserFollows")
+  @@index([username(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_user_username_trgm")
 }
 
 model Poem {
@@ -48,6 +50,7 @@ model Poem {
   user User @relation(fields: [userId], references: [id]) 
 
   stanzas Stanza[]
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_poem_title_trgm")
 }
 
 model Stanza {
@@ -62,6 +65,7 @@ model Stanza {
   updatedAt DateTime @updatedAt
   
   comments Comment[] @relation("StanzaComments")
+  @@index([body(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_stanza_body_trgm")
 }
 
 model Comment {
@@ -103,4 +107,19 @@ model Collection {
   updatedAt DateTime @updatedAt
 
   @@index([collectableId, collectableType])
+}
+
+model Notification {
+  @@map("notifications")
+  id String @id @default(cuid())
+  recipientId String
+  resourceId String
+  resourceType String
+  message String
+  url String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipient User @relation(fields: [recipientId], references: [id]) 
+  @@index([resourceId, resourceType])
 }

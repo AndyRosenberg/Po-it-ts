@@ -5,7 +5,7 @@ CREATE TABLE "collections" (
     "collectableId" TEXT NOT NULL,
     "collectableType" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "collections_pkey" PRIMARY KEY ("id")
 );
