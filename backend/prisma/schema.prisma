@@ -116,6 +116,7 @@ model Notification {
   resourceId String
   resourceType String
   message String
+  hasBeenRead Boolean @default(false)
   url String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
